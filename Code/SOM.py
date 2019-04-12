@@ -1,5 +1,6 @@
 from Code.Parameter import Parameter
 from Code.Common_Functions import *
+from Data.Generated_Data import *
 
 
 class SOM:
@@ -53,7 +54,7 @@ class SOM:
 
     def run(self):
         for i in range(self.epochs_nbr):
-            som.run_epoch()
+            self.run_epoch()
 
     def updating_weights(self, bmu, vector):
         for i in np.ndindex(self.neurons_nbr):
@@ -76,13 +77,17 @@ class SOM:
     def get_neural_list(self):
         return self.neurons
 
-    def mean_error(self, winners):
+    def mean_error(self, winners=None):
+        if not winners:
+            winners = self.get_all_winners()
         error = np.zeros(winners.shape)
         for i in np.ndindex(winners.shape):
             error[i] = np.mean(np.abs(self.data[i] - self.neurons[winners[i]]))
         return np.mean(error)
 
-    def square_error(self, winners):
+    def square_error(self, winners=None):
+        if not winners:
+            winners = self.get_all_winners()
         error = np.zeros(winners.shape)
         for i in np.ndindex(winners.shape):
             error[i] = np.mean((self.data[i] - self.neurons[winners[i]])**2)
@@ -93,8 +98,8 @@ if __name__ == '__main__':
     nb_epochs = 50
     inputs = {"alpha": Parameter(start=0.6, end=0.05, nb_steps=nb_epochs),
               "sigma": Parameter(start=0.5, end=0.001, nb_steps=nb_epochs),
-              "data": np.array([np.random.random(10) for i in range(200)]),
-              "neurons_nbr": (10, 10),
+              "data": sierpinski_carpet(200),
+              "neurons_nbr": (10, 10, 3),
               "epochs_nbr": nb_epochs}
     som = SOM(inputs)
     som.run()
