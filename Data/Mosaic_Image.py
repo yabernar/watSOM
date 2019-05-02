@@ -1,5 +1,7 @@
 from PIL import Image
+import copy
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class MosaicImage:
@@ -20,7 +22,7 @@ class MosaicImage:
             self.pictures_dim[1] *= 3
             self.color = True
         pixels = pixels.reshape(size)
-        nb_pictures = np.array(np.divide(size, self.pictures_dim), dtype=int)
+        self.nb_pictures = np.array(np.divide(size, self.pictures_dim), dtype=int)
         pixels = pixels[0:self.nb_pictures[0] * self.pictures_dim[0],
                         0:self.nb_pictures[1] * self.pictures_dim[1]]  # Cropping the image to make it fit
         px = np.vsplit(pixels, self.nb_pictures[0])
@@ -32,6 +34,11 @@ class MosaicImage:
 
     def get_data(self):
         return self.data
+
+    def display(self):
+        return plt.imshow(self.image)
+
+
     #
     # def load(self, path):
     #     self.data = []

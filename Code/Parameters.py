@@ -1,8 +1,11 @@
+import copy
+
+
 def linear(progress):  # progress is between 0 and 1
     return progress
 
 
-class Parameter:
+class Variable:
     def __init__(self, start=1, end=0, nb_steps=1, evolution=linear):
         self.start = start
         self.end = end
@@ -20,3 +23,16 @@ class Parameter:
         if self.iteration < self.nb_steps:
             self.iteration += 1
         self.current = self.start - self.difference * self.evolution(self.iteration/self.nb_steps)
+
+
+class Parameters:
+    def __init__(self, dictionary=None):
+        if dictionary is None:
+            dictionary = {}
+        self.data = dictionary
+
+    def __getitem__(self, item):
+        return copy.deepcopy(self.data[item])
+
+    def __setitem__(self, key, value):
+        self.data[key] = copy.deepcopy(value)

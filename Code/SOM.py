@@ -1,16 +1,16 @@
-from Code.Parameter import Parameter
+from Code.Parameters import Variable, Parameters
 from Code.Common_Functions import *
 from Data.Generated_Data import *
 
 
 class SOM:
-    def __init__(self, inputs):
+    def __init__(self, parameters):
         # Parameters
-        self.alpha = inputs["alpha"]
-        self.sigma = inputs["sigma"]
-        self.data = inputs["data"]
-        self.neurons_nbr = inputs["neurons_nbr"]
-        self.epochs_nbr = inputs["epochs_nbr"]
+        self.alpha = parameters["alpha"]
+        self.sigma = parameters["sigma"]
+        self.data = parameters["data"]
+        self.neurons_nbr = parameters["neurons_nbr"]
+        self.epochs_nbr = parameters["epochs_nbr"]
 
         # Computing variables
         self.neurons = np.zeros(self.neurons_nbr + self.data.shape[1:], dtype=float)
@@ -96,11 +96,11 @@ class SOM:
 
 if __name__ == '__main__':
     nb_epochs = 50
-    inputs = {"alpha": Parameter(start=0.6, end=0.05, nb_steps=nb_epochs),
-              "sigma": Parameter(start=0.5, end=0.001, nb_steps=nb_epochs),
-              "data": sierpinski_carpet(200),
-              "neurons_nbr": (10, 10, 3),
-              "epochs_nbr": nb_epochs}
+    inputs = Parameters({"alpha": Variable(start=0.6, end=0.05, nb_steps=nb_epochs),
+                         "sigma": Variable(start=0.5, end=0.001, nb_steps=nb_epochs),
+                         "data": sierpinski_carpet(200),
+                         "neurons_nbr": (10, 10, 3),
+                         "epochs_nbr": nb_epochs})
     som = SOM(inputs)
     som.run()
     print(som.mean_error(som.get_all_winners()))
