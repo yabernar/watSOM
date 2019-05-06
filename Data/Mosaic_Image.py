@@ -32,6 +32,9 @@ class MosaicImage:
                 self.data.append(picture.flatten())
         self.data = np.array(self.data) / 255
 
+    # def reconstruct(self):
+
+
     def get_data(self):
         return self.data
 
