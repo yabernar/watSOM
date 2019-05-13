@@ -31,6 +31,12 @@ class SOM:
             winners_list[i] = self.winner(self.data[i])
         return winners_list
 
+    def get_reconstructed_data(self):
+        r_data = []
+        for index in self.get_all_winners():
+            r_data.append(self.neurons[index])
+        return r_data
+
     def run_iteration(self):
         if self.iteration >= self.max_iterations:
             return False
@@ -75,7 +81,7 @@ class SOM:
         return self.neurons
 
     def get_neural_list(self):
-        return self.neurons
+        return np.reshape(self.neurons, (-1,) + self.data.shape[1:])
 
     def mean_error(self, winners=None):
         if not winners:
