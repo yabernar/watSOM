@@ -1,9 +1,8 @@
 import os
-from PIL import Image
+from PIL import Image, ImageChops
 import matplotlib.pyplot as plt
 
-from Code.Parameters import Parameters, Variable
-from Code.SOM import SOM
+from Code.SOM import *
 from Data.Mosaic_Image import MosaicImage
 
 path = "/users/yabernar/GrosDisque/CDNET14"
@@ -31,13 +30,31 @@ som = SOM(inputs_SOM)
 for i in range(nb_epochs):
     print('Epoch ', i)
     som.run_epoch()
+    original = data.image
+    reconstructed = data.reconstruct(som.get_reconstructed_data())
+    som_image = data.reconstruct(som.get_neural_list(), size=som.neurons_nbr)
+    difference = ImageChops.difference(original, Image.fromarray(reconstructed))
+    difference = np.asarray(difference)
+    difference = np.sum(difference, axis=2)
+    difference = np.divide(difference, 255*3)
+    print(np.mean(np.square(difference)))
     if plot is None:
-        plot = plt.imshow(data.reconstruct(som.get_reconstructed_data()))
+        plot = []
+        plt.subplot(2, 2, 1)
+        plot.append(plt.imshow(original))
+        plt.subplot(2, 2, 2)
+        plot.append(plt.imshow(reconstructed))
+        plt.subplot(2, 2, 3)
+        plot.append(plt.imshow(som_image))
+        plt.subplot(2, 2, 4)
+        plot.append(plt.imshow(difference))
     else:
-        plot.set_data(data.reconstruct(som.get_neural_list(), size=som.neurons_nbr))
+        plot[1].set_data(reconstructed)
+        plot[2].set_data(som_image)
+        plot[3].set_data(difference)
     plt.pause(0.1)
     plt.draw()
-
+plt.waitforbuttonpress()
 # for i in range(temporal_ROI[0], temporal_ROI[1]+1):
 #     print('Opening image {0:06d}'.format(i))
 #     img = Image.open(chosen_path+'in{0:06d}.jpg'.format(i))
