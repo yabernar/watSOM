@@ -15,7 +15,8 @@ class SOM:
         # Computing variables
         self.neurons = np.zeros(self.neurons_nbr + self.data.shape[1:], dtype=float)
         self.vector_list = None
-        self.distance_vector = np.empty(np.sum(self.neurons_nbr))
+        # self.distance_vector = np.empty(np.sum(self.neurons_nbr))
+        self.distance_vector = np.empty(hexagonal_distance((0,0), self.neurons_nbr))
         self.iteration = 0
         self.max_iterations = self.epochs_nbr * self.data.shape[0]
 
@@ -23,6 +24,7 @@ class SOM:
         dist = np.empty(self.neurons_nbr, dtype=float)
         for i in np.ndindex(dist.shape):
             dist[i] = quadratic_distance(self.neurons[i], vector)
+#            dist[i] = fast_ied(self.neurons[i], vector)
         return np.unravel_index(np.argmin(dist, axis=None), dist.shape)  # Returning the Best Matching Unit's index.
 
     def get_all_winners(self):
@@ -64,7 +66,8 @@ class SOM:
 
     def updating_weights(self, bmu, vector):
         for i in np.ndindex(self.neurons_nbr):
-            dist = manhattan_distance(np.asarray(i), np.asarray(bmu))
+            # dist = manhattan_distance(np.asarray(i), np.asarray(bmu))
+            dist = hexagonal_distance(np.asarray(i), np.asarray(bmu))
             self.neurons[i] += self.alpha.get() * self.distance_vector[dist] * (vector - self.neurons[i])
 
     def fully_random_vector(self):
