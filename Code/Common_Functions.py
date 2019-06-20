@@ -21,7 +21,7 @@ for i in range(kernel_size[0]):
         b = np.array([(j%img_dims[0])/img_dims[0], (j//img_dims[0])/img_dims[1]])
         d = np.sqrt(np.sum((a-b)**2))
         kernel[i, j] = np.exp(-d**2/2)
-print(kernel)
+# print(kernel)
 # kernel.flatten()
 
 

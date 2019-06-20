@@ -20,6 +20,9 @@ class SOM:
         self.iteration = 0
         self.max_iterations = self.epochs_nbr * self.data.shape[0]
 
+    def set_data(self, data):
+        self.data = data
+
     def winner(self, vector):
         dist = np.empty(self.neurons_nbr, dtype=float)
         for i in np.ndindex(dist.shape):
@@ -33,9 +36,11 @@ class SOM:
             winners_list[i] = self.winner(self.data[i])
         return winners_list
 
-    def get_reconstructed_data(self):
+    def get_reconstructed_data(self, winners=None):
+        if winners is None:
+            winners = self.get_all_winners()
         r_data = []
-        for index in self.get_all_winners():
+        for index in winners:
             r_data.append(self.neurons[index])
         return r_data
 
