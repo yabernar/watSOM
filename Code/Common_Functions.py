@@ -31,7 +31,7 @@ def quadratic_distance(x, y):
 
 
 def manhattan_distance(x, y):
-    return np.sum(np.abs(x - y))
+    return np.sum(np.abs(np.array(x) - np.array(y)))
 
 
 def oddr_to_cube(hex):

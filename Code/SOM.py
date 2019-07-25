@@ -16,7 +16,7 @@ class SOM:
         self.neurons = np.zeros(self.neurons_nbr + self.data.shape[1:], dtype=float)
         self.vector_list = None
         # self.distance_vector = np.empty(np.sum(self.neurons_nbr))
-        self.distance_vector = np.empty(hexagonal_distance((0,0), self.neurons_nbr))
+        self.distance_vector = np.empty(manhattan_distance((0,0), self.neurons_nbr))
         self.iteration = 0
         self.max_iterations = self.epochs_nbr * self.data.shape[0]
 
@@ -29,6 +29,32 @@ class SOM:
             dist[i] = quadratic_distance(self.neurons[i], vector)
 #            dist[i] = fast_ied(self.neurons[i], vector)
         return np.unravel_index(np.argmin(dist, axis=None), dist.shape)  # Returning the Best Matching Unit's index.
+
+    def winner2(self, vector):
+        cont = True
+        # bmu = (np.random.randint(0, self.neurons_nbr[0]), np.random.randint(0, self.neurons_nbr[1]))
+        bmu = (np.int((self.current_vector_index / 62) / 36 * self.neurons_nbr[0]),
+              np.int((self.current_vector_index % 62) / 62 * self.neurons_nbr[1]))
+        best = quadratic_distance(self.neurons[bmu], vector)
+        while cont:
+            cont = False
+            neighbors = []
+            if bmu[0] < self.neurons_nbr[0]-1:
+                neighbors.append((bmu[0]+1, bmu[1]))
+            if bmu[0] > 0:
+                neighbors.append((bmu[0]-1, bmu[1]))
+            if bmu[1] < self.neurons_nbr[1]-1:
+                neighbors.append((bmu[0], bmu[1]+1))
+            if bmu[1] > 0:
+                neighbors.append((bmu[0], bmu[1]-1))
+            for i in neighbors:
+                value = quadratic_distance(self.neurons[i[0], i[1]], vector)
+                if value < best:
+                    cont = True
+                    best = value
+                    bmu = i
+        return bmu
+
 
     def get_all_winners(self):
         winners_list = np.zeros(self.data.shape[0], dtype=tuple)  # list of BMU for each corresponding training vector
@@ -71,15 +97,16 @@ class SOM:
 
     def updating_weights(self, bmu, vector):
         for i in np.ndindex(self.neurons_nbr):
-            # dist = manhattan_distance(np.asarray(i), np.asarray(bmu))
-            dist = hexagonal_distance(np.asarray(i), np.asarray(bmu))
+            dist = manhattan_distance(np.asarray(i), np.asarray(bmu))
+            # dist = hexagonal_distance(np.asarray(i), np.asarray(bmu))
             self.neurons[i] += self.alpha.get() * self.distance_vector[dist] * (vector - self.neurons[i])
 
     def fully_random_vector(self):
         return np.random.randint(np.shape(self.data)[0])
 
     def unique_random_vector(self):
-        return self.vector_list.pop(0)
+        self.current_vector_index = self.vector_list.pop(0)
+        return self.current_vector_index
 
     def generate_random_list(self):
         self.vector_list = list(range(len(self.data)))

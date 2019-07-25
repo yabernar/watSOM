@@ -24,14 +24,14 @@ bkg = Image.open(path2 + 'ducks{0:05d}.png'.format(1))
 ############
 # LEARNING #
 ############
-pictures_dim = [5, 5]
+pictures_dim = [10, 10]
 parameters = Parameters({"pictures_dim": pictures_dim})
 data = MosaicImage(bkg, parameters)
 nb_epochs = 30
 inputs_SOM = Parameters({"alpha": Variable(start=0.5, end=0.25, nb_steps=nb_epochs),
-                         "sigma": Variable(start=0.1, end=0.001, nb_steps=nb_epochs),
+                         "sigma": Variable(start=0.1, end=0.03, nb_steps=nb_epochs),
                          "data": data.get_data(),
-                         "neurons_nbr": (10, 10),
+                         "neurons_nbr": (20, 30),
                          "epochs_nbr": nb_epochs})
 som = SOM(inputs_SOM)
 for i in range(nb_epochs):
