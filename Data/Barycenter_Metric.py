@@ -4,6 +4,7 @@ from PIL import Image, ImageChops
 import matplotlib.pyplot as plt
 from scipy import ndimage
 import numpy as np
+import pandas as pd
 
 np.set_printoptions(threshold=np.inf)
 
@@ -13,25 +14,30 @@ path = "/users/yabernar/GrosDisque/CDNET14/dataset/nightVideos/bridgeEntry/groun
 files = sorted(os.listdir(path), key=str.lower)
 
 plot = None
+results = pd.DataFrame(columns=list('xy'))
 
 ###########
 # DISPLAY #
 ###########
 print(len(files))
-for im in range(1220, len(files)):
+for im in range(2450, len(files)):
     image = Image.open(path + files[im])
 
     array = np.divide(np.array(image), 255)
     array[array < 0.8] = 0
     barycentre = ndimage.measurements.center_of_mass(array)
     if np.isnan(barycentre[0]):
-        barycentre = np.divide(array.shape, 2)
+        tmp = np.divide(array.shape, 2)
+        barycentre = (tmp[0], tmp[1])
     vecteur_distances = np.zeros(int(np.sqrt(array.shape[0]**2 + array.shape[1]**2)))
     for x in range(array.shape[0]):
         for y in range(array.shape[1]):
             vecteur_distances[int(np.sqrt((x-int(barycentre[0]))**2 + (y-int(barycentre[1]))**2))] += array[x, y]
     vecteur_distances = np.divide(vecteur_distances, np.sum(vecteur_distances))
     print('Image ', im, 'Barycentre : ', barycentre)
+    print(np.array(barycentre))
+    print(pd.DataFrame(barycentre, columns=list('xy')))
+    results.append(pd.DataFrame(barycentre))
 
     bary = (int(barycentre[0]), int(barycentre[1]))
     if plot is None:
@@ -49,3 +55,5 @@ for im in range(1220, len(files)):
     plt.pause(0.01)
     plt.draw()
 plt.waitforbuttonpress()
+
+print(results.head())
