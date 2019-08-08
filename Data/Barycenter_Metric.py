@@ -9,7 +9,7 @@ np.set_printoptions(threshold=np.inf)
 
 from Data.Mosaic_Image import MosaicImage
 
-path = "/users/yabernar/GrosDisque/CDNET14/dataset/baseline/highway/groundtruth/"
+path = "/users/yabernar/GrosDisque/CDNET14/dataset/nightVideos/bridgeEntry/groundtruth/"
 files = sorted(os.listdir(path), key=str.lower)
 
 plot = None
@@ -17,11 +17,15 @@ plot = None
 ###########
 # DISPLAY #
 ###########
-for im in range(500, len(files)):
+print(len(files))
+for im in range(1220, len(files)):
     image = Image.open(path + files[im])
 
     array = np.divide(np.array(image), 255)
+    array[array < 0.8] = 0
     barycentre = ndimage.measurements.center_of_mass(array)
+    if np.isnan(barycentre[0]):
+        barycentre = np.divide(array.shape, 2)
     vecteur_distances = np.zeros(int(np.sqrt(array.shape[0]**2 + array.shape[1]**2)))
     for x in range(array.shape[0]):
         for y in range(array.shape[1]):
