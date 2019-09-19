@@ -15,6 +15,7 @@ class SOM:
         # Computing variables
         self.neurons = np.zeros(self.neurons_nbr + self.data.shape[1:], dtype=float)
         self.vector_list = None
+        self.distance_to_input = None
         # self.distance_vector = np.empty(np.sum(self.neurons_nbr))
         self.distance_vector = np.empty(manhattan_distance((0,0), self.neurons_nbr))
         self.iteration = 0
@@ -28,6 +29,8 @@ class SOM:
         for i in np.ndindex(dist.shape):
             dist[i] = quadratic_distance(self.neurons[i], vector)
 #            dist[i] = fast_ied(self.neurons[i], vector)
+        self.distance_to_input = dist
+        print(self.distance_to_input)
         return np.unravel_index(np.argmin(dist, axis=None), dist.shape)  # Returning the Best Matching Unit's index.
 
     def winner2(self, vector):
