@@ -8,7 +8,7 @@ from Code.SOM import SOM, manhattan_distance
 from Data.Mosaic_Image import MosaicImage
 
 path = "/users/yabernar/GrosDisque/CDNET14"
-path2 = "/users/yabernar/workspace/aweSOM/Data/images/tracking/ducks/"
+path2 = "/users/yabernar/workspace/aweSOM/Data/images/tracking/cyclists/"
 path3 = "/users/yabernar/Documents/Presentation resources/Model/base image/"
 
 categories = sorted(os.listdir(path + "/dataset"), key=str.lower)
@@ -17,19 +17,19 @@ print(categories)
 print(elements)
 
 chosen_path = path + "/dataset/" + categories[1] + "/" + elements[0]
-temporal_ROI = (1, 299)
+temporal_ROI = (1, 80)
 plot = None
 # bkg = Image.open(chosen_path + "/input/" + 'in{0:06d}.jpg'.format(472))
-bkg = Image.open(path2 + 'ducks{0:05d}.png'.format(1))
+bkg = Image.open(path2 + 'cyclists{0:05d}.png'.format(1))
 # bkg = Image.open(path3 + "example_base.png")
 
 ############
 # LEARNING #
 ############
-pictures_dim = [10, 10]
+pictures_dim = [20, 20]
 parameters = Parameters({"pictures_dim": pictures_dim})
 data = MosaicImage(bkg, parameters)
-nb_epochs = 50
+nb_epochs = 10
 inputs_SOM = Parameters({"alpha": Variable(start=0.5, end=0.25, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.1, end=0.03, nb_steps=nb_epochs),
                          "data": data.get_data(),
@@ -50,9 +50,9 @@ for i in range(nb_epochs):
     print(np.mean(np.square(difference)))
     som_image = Image.fromarray(som_image)
 
-    reconstructed.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/reconstructed"+"{0:02d}.png".format(i))
-    som_image.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/som_image{0:02d}.png".format(i))
-    difference_image.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/difference{0:02d}.png".format(i))
+    # reconstructed.save("/users/yabernar/Documents/Presentation resources/Model/base image/training/reconstructed"+"{0:02d}.png".format(i))
+    # som_image.save("/users/yabernar/Documents/Presentation resources/Model/base image/training/som_image{0:02d}.png".format(i))
+    # difference_image.save("/users/yabernar/Documents/Presentation resources/Model/base image/training/difference{0:02d}.png".format(i))
 
     if plot is None:
         plot = []
@@ -71,10 +71,50 @@ for i in range(nb_epochs):
     plt.pause(0.02)
     plt.draw()
 
-
-initial_map = som.get_all_winners()
 plot = None
 plt.waitforbuttonpress()
+
+for i in range(len(som.data)):
+    print('Iteration ', i)
+    som.run_iteration()
+    original = data.image
+    # reconstructed = Image.fromarray(data.reconstruct(som.get_reconstructed_data()))
+    # som_image = data.reconstruct(som.get_neural_list(), size=som.neurons_nbr)
+    # difference_image = ImageChops.difference(original, reconstructed).convert('L')
+    # difference = np.asarray(difference_image)
+    # # difference = np.sum(difference, axis=2)
+    # # difference = np.divide(difference, 255*3)
+    # difference = np.divide(difference, 255)
+    # print(np.mean(np.square(difference)))
+    # som_image = Image.fromarray(som_image)
+
+    distances = Image.fromarray(som.distance_to_input)
+    print(som.distance_to_input)
+    # reconstructed.save("/users/yabernar/Documents/Presentation resources/Model/base image/training/reconstructed"+"{0:02d}.png".format(i))
+    # som_image.save("/users/yabernar/Documents/Presentation resources/Model/base image/training/som_image{0:02d}.png".format(i))
+    # difference_image.save("/users/yabernar/Documents/Presentation resources/Model/base image/training/difference{0:02d}.png".format(i))
+
+    if plot is None:
+        plot = []
+        plt.subplot(2, 2, 1)
+        plot.append(plt.imshow(original))
+        plt.subplot(2, 2, 2)
+        plot.append(plt.imshow(distances, cmap='plasma'))
+        # plt.subplot(2, 2, 3)
+        # plot.append(plt.imshow(som_image, cmap='gray'))
+        # plt.subplot(2, 2, 4)
+        # plot.append(plt.imshow(difference, cmap='gray'))
+    else:
+        plot[1].set_data(distances)
+        # plot[2].set_data(som_image)
+        # plot[3].set_data(difference)
+    plt.pause(1)
+    plt.draw()
+
+
+initial_map = som.get_all_winners()
+plt.waitforbuttonpress()
+plot = None
 
 ############
 # TRACKING #
@@ -84,7 +124,7 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
     print('Image ', i)
     # current = Image.open(chosen_path + "/input/in{0:06d}.jpg".format(i))
     # truth = Image.open(chosen_path + "/groundtruth/gt{0:06d}.png".format(i))
-    current = Image.open(path2 + "ducks{0:05d}.png".format(i))
+    current = Image.open(path2 + "cyclists{0:05d}.png".format(i))
     # current = Image.open(path3 + "example_moved.png")
 
     bgs_difference = ImageChops.difference(bkg, current).convert('L')
@@ -110,11 +150,6 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
 #    som_difference.save("/users/yabernar/workspace/watSOM/Results/DNF/saliency"+str(i)+".png")
 #    diff_winners.save("/users/yabernar/workspace/watSOM/Results/diff_winners"+str(i)+".png")
 
-    som_difference.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/som_difference.png" + "{0:02d}.png".format(i))
-    reconstructed.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/reconstructed.png" + "{0:02d}.png".format(i))
-    som_difference_modulated.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/som_difference_modulated.png" + "{0:02d}.png".format(i))
-    diff_winners.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/diff_winners.png" + "{0:02d}.png".format(i))
-
     if plot is None:
         plot = []
         plt.subplot(2, 2, 1)
@@ -125,6 +160,10 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
         plot.append(plt.imshow(som_difference_modulated, cmap='gray'))
         plt.subplot(2, 2, 4)
         plot.append(plt.imshow(diff_winners))
+        # som_difference.save("/users/yabernar/Documents/Presentation resources/Model/base image/som_difference.png")
+        # reconstructed.save("/users/yabernar/Documents/Presentation resources/Model/base image/reconstructed.png")
+        # som_difference_modulated.save("/users/yabernar/Documents/Presentation resources/Model/base image/som_difference_modulated.png")
+        # diff_winners.save("/users/yabernar/Documents/Presentation resources/Model/base image/diff_winners.png")
 
     else:
         plot[0].set_data(current)

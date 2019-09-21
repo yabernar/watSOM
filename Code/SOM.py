@@ -30,7 +30,6 @@ class SOM:
             dist[i] = quadratic_distance(self.neurons[i], vector)
 #            dist[i] = fast_ied(self.neurons[i], vector)
         self.distance_to_input = dist
-        print(self.distance_to_input)
         return np.unravel_index(np.argmin(dist, axis=None), dist.shape)  # Returning the Best Matching Unit's index.
 
     def winner2(self, vector):
