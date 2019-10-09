@@ -10,7 +10,7 @@ from Data.Mosaic_Image import MosaicImage
 
 np.set_printoptions(threshold=np.inf)
 
-video = "cyclists"
+video = "dogs"
 
 path = "/users/yabernar/GrosDisque/CDNET14"
 path2 = "/users/yabernar/workspace/aweSOM/Data/images/tracking/"+video+"/"
@@ -22,19 +22,19 @@ print(categories)
 print(elements)
 
 chosen_path = path + "/dataset/" + categories[1] + "/" + elements[0]
-temporal_ROI = (1, 100)
+temporal_ROI = (1, 200)
 plot = None
 # bkg = Image.open(chosen_path + "/input/" + 'in{0:06d}.jpg'.format(472))
-# bkg = Image.open(path2 + video + '{0:05d}.png'.format(1))
-bkg = Image.open(path3 + "example_base.png")
+bkg = Image.open(path2 + video + '{0:05d}.png'.format(1))
+# bkg = Image.open(path3 + "example_base.png")
 
 ############
 # LEARNING #
 ############
-pictures_dim = [20, 20]
+pictures_dim = [10, 10]
 parameters = Parameters({"pictures_dim": pictures_dim})
 data = MosaicImage(bkg, parameters)
-nb_epochs = 5
+nb_epochs = 50
 inputs_SOM = Parameters({"alpha": Variable(start=0.5, end=0.25, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.1, end=0.03, nb_steps=nb_epochs),
                          "data": data.get_data(),
@@ -81,7 +81,7 @@ initial_map = som.get_all_winners()
 plot = None
 plt.waitforbuttonpress()
 dnf_size = (data.nb_pictures[0]*data.pictures_dim[0], data.nb_pictures[1]*data.pictures_dim[0])
-dnf = DNF(dnf_size[0], dnf_size[1])
+# dnf = DNF(dnf_size[0], dnf_size[1])
 
 ############
 # TRACKING #
@@ -91,8 +91,8 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
     print('Image ', i)
     # current = Image.open(chosen_path + "/input/in{0:06d}.jpg".format(i))
     # truth = Image.open(chosen_path + "/groundtruth/gt{0:06d}.png".format(i))
-    # current = Image.open(path2 + video + "{0:05d}.png".format(i))
-     current = Image.open(path3 + "example_moved.png")
+    current = Image.open(path2 + video + "{0:05d}.png".format(i))
+    # current = Image.open(path3 + "example_moved.png")
 
     bgs_difference = ImageChops.difference(bkg, current).convert('L')
 
@@ -114,21 +114,22 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
     som_difference = ImageOps.autocontrast(ImageChops.difference(reconstructed, current).convert('L'))
     som_difference_modulated = ImageOps.autocontrast(ImageChops.multiply(som_difference, diff_winners))
 
-    dnf.input = np.divide(np.asarray(som_difference_modulated), 255)
-    dnf.update_map()
-    print(np.max(dnf.input))
-    print(np.min(dnf.input))
-
-    print(np.max(dnf.potentials))
-    print(np.min(dnf.potentials))
-    dnf_display = Image.fromarray(np.multiply(dnf.potentials, 255))
-#    som_difference.save("/users/yabernar/workspace/watSOM/Results/DNF/saliency"+str(i)+".png")
-#    diff_winners.save("/users/yabernar/workspace/watSOM/Results/diff_winners"+str(i)+".png")
+    # dnf.input = np.divide(np.asarray(som_difference_modulated), 255)
+    # dnf.update_map()
+    # print(np.max(dnf.input))
+    # print(np.min(dnf.input))
+    #
+    # print(np.max(dnf.potentials))
+    # print(np.min(dnf.potentials))
+    # dnf_display = Image.fromarray(np.multiply(dnf.potentials, 255)).convert('RGB')
+    # som_difference.save("/users/yabernar/workspace/watSOM/Results/DNF/saliency"+str(i)+".png")
+    # diff_winners.save("/users/yabernar/workspace/watSOM/Results/diff_winners"+str(i)+".png")
 
     som_difference.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/som_difference.png" + "{0:02d}.png".format(i))
     reconstructed.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/reconstructed.png" + "{0:02d}.png".format(i))
     som_difference_modulated.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/som_difference_modulated.png" + "{0:02d}.png".format(i))
     diff_winners.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/diff_winners.png" + "{0:02d}.png".format(i))
+    # dnf_display.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/dnf_display.png" + "{0:02d}.png".format(i))
 
     if plot is None:
         plot = []
@@ -140,15 +141,15 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
         plot.append(plt.imshow(som_difference_modulated, cmap='gray'))
         plt.subplot(3, 2, 4)
         plot.append(plt.imshow(diff_winners))
-        plt.subplot(3, 2, 5)
-        plot.append(plt.imshow(dnf_display))
+        # plt.subplot(3, 2, 5)
+        # plot.append(plt.imshow(dnf_display))
 
     else:
         plot[0].set_data(current)
         plot[1].set_data(som_difference)
         plot[2].set_data(som_difference_modulated)
         plot[3].set_data(diff_winners)
-        plot[4].set_data(dnf_display)
+        # plot[4].set_data(dnf_display)
 #        plot[3].set_data(truth)
     plt.pause(0.02)
     plt.draw()

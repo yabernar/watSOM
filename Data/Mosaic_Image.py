@@ -15,9 +15,9 @@ class MosaicImage:
     def clip(self):
         self.data = []
         size = np.flip(self.image.size, 0)  # For some strange reason the data isn't ordered in the same way as the size says
-        print(size)
+        # print(size)
         pixels = np.array(self.image.getdata(), 'uint8')
-        print(pixels.shape)
+        # print(pixels.shape)
         if len(pixels.shape) == 2:  # File has RGB colours
             size[1] *= 3
             self.pictures_dim[1] *= 3
