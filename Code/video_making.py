@@ -17,15 +17,15 @@ path2 = "/users/yabernar/workspace/aweSOM/Data/images/tracking/"+video+"/"
 path3 = "/users/yabernar/Documents/Presentation resources/Model/base image/"
 
 categories = sorted(os.listdir(path + "/dataset"), key=str.lower)
-elements = sorted(os.listdir(path + "/dataset/" + categories[1]), key=str.lower)
+elements = sorted(os.listdir(path + "/dataset/" + categories[11]), key=str.lower)
 print(categories)
 print(elements)
 
-chosen_path = path + "/dataset/" + categories[1] + "/" + elements[0]
+chosen_path = path + "/dataset/" + categories[11] + "/" + elements[0]
 temporal_ROI = (1, 200)
 plot = None
-# bkg = Image.open(chosen_path + "/input/" + 'in{0:06d}.jpg'.format(472))
-bkg = Image.open(path2 + video + '{0:05d}.png'.format(1))
+bkg = Image.open(chosen_path + "/input/" + 'bkg.jpg')
+# bkg = Image.open(path2 + video + '{0:05d}.png'.format(1))
 # bkg = Image.open(path3 + "example_base.png")
 
 ############
@@ -55,9 +55,9 @@ for i in range(nb_epochs):
     print(np.mean(np.square(difference)))
     som_image = Image.fromarray(som_image)
 
-    reconstructed.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/reconstructed"+"{0:02d}.png".format(i))
-    som_image.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/som_image{0:02d}.png".format(i))
-    difference_image.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/difference{0:02d}.png".format(i))
+    # reconstructed.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/reconstructed"+"{0:02d}.png".format(i))
+    # som_image.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/som_image{0:02d}.png".format(i))
+    # difference_image.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/training/difference{0:02d}.png".format(i))
 
     if plot is None:
         plot = []
@@ -89,9 +89,9 @@ dnf_size = (data.nb_pictures[0]*data.pictures_dim[0], data.nb_pictures[1]*data.p
 for i in range(temporal_ROI[0], temporal_ROI[1]):
     i *= 1
     print('Image ', i)
-    # current = Image.open(chosen_path + "/input/in{0:06d}.jpg".format(i))
+    current = Image.open(chosen_path + "/input/in{0:06d}.jpg".format(i))
     # truth = Image.open(chosen_path + "/groundtruth/gt{0:06d}.png".format(i))
-    current = Image.open(path2 + video + "{0:05d}.png".format(i))
+    # current = Image.open(path2 + video + "{0:05d}.png".format(i))
     # current = Image.open(path3 + "example_moved.png")
 
     bgs_difference = ImageChops.difference(bkg, current).convert('L')
@@ -125,10 +125,10 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
     # som_difference.save("/users/yabernar/workspace/watSOM/Results/DNF/saliency"+str(i)+".png")
     # diff_winners.save("/users/yabernar/workspace/watSOM/Results/diff_winners"+str(i)+".png")
 
-    som_difference.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/som_difference.png" + "{0:02d}.png".format(i))
-    reconstructed.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/reconstructed.png" + "{0:02d}.png".format(i))
-    som_difference_modulated.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/som_difference_modulated.png" + "{0:02d}.png".format(i))
-    diff_winners.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/diff_winners.png" + "{0:02d}.png".format(i))
+    # som_difference.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/som_difference.png" + "{0:02d}.png".format(i))
+    # reconstructed.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/reconstructed.png" + "{0:02d}.png".format(i))
+    # som_difference_modulated.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/som_difference_modulated.png" + "{0:02d}.png".format(i))
+    # diff_winners.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/diff_winners.png" + "{0:02d}.png".format(i))
     # dnf_display.save("/users/yabernar/Documents/Presentation resources/Examples/last_run/tracking/dnf_display.png" + "{0:02d}.png".format(i))
 
     if plot is None:

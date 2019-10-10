@@ -12,14 +12,15 @@ Processing = SaliencyGenerator
 
 categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
 print("Categories :", categories)
-for cat in categories:
+for cat in categories[10:]:
     elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
     print("Elements of", cat, ":", elements)
     for elem in elements:
         print("Processing", elem, "...")
-        os.makedirs(os.path.join(output_path, cat, elem), exist_ok=True)
+        os.makedirs(os.path.join(output_path, 'results', cat, elem), exist_ok=True)
         current_path = os.path.join(cdnet_path, cat, elem)
         roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
         temporal_roi = (int(roi_file[0]), int(roi_file[1]))
-        Processing(os.path.join(current_path, "input"), os.path.join(output_path, cat, elem), temporal_roi)
+        Processing(os.path.join(current_path, "input"), os.path.join(output_path, 'results', cat, elem),
+                   os.path.join(output_path, 'supplements', cat, elem), temporal_roi)
 

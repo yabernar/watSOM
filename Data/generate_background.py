@@ -18,8 +18,7 @@ def generate_background(folder_path, nb_images):
     os.remove(os.path.join(folder_path, "selected_images.txt"))  #cleaning up
 
     # COMMAND LINE
-    # ls | head -100 > tmp.txt; convert @tmp.txt -evaluate-sequence median bkg.jpg; rm tmp.txt
-
+    # ls | head -100 > tmp.txt; convert @tmp.txt -type TrueColor -evaluate-sequence median bkg.jpg; rm tmp.txt
 
 if __name__ == '__main__':
     CDNET_path = "/users/yabernar/GrosDisque/CDNET14/dataset"
