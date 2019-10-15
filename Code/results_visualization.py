@@ -3,7 +3,7 @@ from PIL import Image, ImageChops
 import matplotlib.pyplot as plt
 
 cdnet_path = "/users/yabernar/GrosDisque/CDNET14/dataset"
-output_path = "/users/yabernar/GrosDisque/CDNET14/saliency"
+output_path = "/users/yabernar/GrosDisque/CDNET14/optimisation"
 
 selected_category = 6
 selected_element = 3
@@ -26,7 +26,7 @@ plot = None
 ############
 # TRACKING #
 ############
-for i in range(temporal_roi[0], temporal_roi[1]):
+for i in range(temporal_roi[0], temporal_roi[1], 50):
     base = Image.open(elements_path + "/input/in{0:06d}.jpg".format(i))
     truth = Image.open(elements_path + "/groundtruth/gt{0:06d}.png".format(i))
 
@@ -56,6 +56,6 @@ for i in range(temporal_roi[0], temporal_roi[1]):
         plot[3].set_data(difference)
         plot[4].set_data(diff_winners)
         plot[5].set_data(saliency)
-    plt.pause(0.02)
+    plt.pause(1)
     plt.draw()
 plt.waitforbuttonpress()
