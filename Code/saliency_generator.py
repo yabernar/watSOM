@@ -8,22 +8,39 @@ from Code.Parameters import Parameters, Variable
 from Code.SOM import SOM, manhattan_distance
 from Data.Mosaic_Image import MosaicImage
 
-
-
 np.set_printoptions(threshold=np.inf)
-
 
 class SaliencyGenerator:
 
-    def __init__(self, input_path, output_path, supplements_path, temporal_ROI, mask_ROI):
-        bkg = Image.open(os.path.join(input_path, "bkg.jpg"))
+    def __init__(self, input_path, output_path, supplements_path, temporal_ROI, mask_ROI, threshold = 100):
+        self.bkg = Image.open(os.path.join(input_path, "bkg.jpg"))
         self.mask = mask_ROI
-        self.learning(bkg)
-        self.generate(input_path, output_path, supplements_path, temporal_ROI)
+        self.input_path = input_path
+        self.output_path = output_path
+        self.supplements_path = supplements_path
+        self.temporal_ROI = temporal_ROI
+        self.threshold = threshold
+
+    def generate_all(self):
+        print("[Learning--", end='', flush=True)
+        self.learning(self.bkg)
+        print("--Tracking--", end = '', flush=True)
+        self.generate(self.input_path, self.output_path, self.supplements_path, self.temporal_ROI)
         print("--Finished]", flush=True)
 
+    def optimize(self, step=30):
+        os.makedirs(os.path.join(self.supplements_path, "difference"), exist_ok=True)
+        os.makedirs(os.path.join(self.supplements_path, "diff_winners"), exist_ok=True)
+        os.makedirs(os.path.join(self.supplements_path, "saliency"), exist_ok=True)
+        os.makedirs(os.path.join(self.supplements_path, "thresholded"), exist_ok=True)
+
+        self.learning(self.bkg)
+        indexes = range(self.temporal_ROI[0], self.temporal_ROI[1]+1, step)
+        nb_runs = len(indexes)
+        for i in indexes:
+            self.extract_image(self.input_path, self.output_path, self.supplements_path, i)
+
     def learning(self, bkg_image):
-        print("[Learning--", end='', flush=True)
         # PARAMETERS
         self.pictures_dim = [10, 10]
         nb_epochs = 50
@@ -43,7 +60,6 @@ class SaliencyGenerator:
         self.initial_map = self.som.get_all_winners()
 
     def generate(self, input_path, output_path, supplements_path, temporal_ROI):
-        print("--Tracking--", end = '', flush=True)
         os.makedirs(os.path.join(supplements_path, "difference"), exist_ok=True)
         os.makedirs(os.path.join(supplements_path, "diff_winners"), exist_ok=True)
         os.makedirs(os.path.join(supplements_path, "saliency"), exist_ok=True)
@@ -54,11 +70,11 @@ class SaliencyGenerator:
         nb_runs = len(indexes)
         pool = mp.Pool(8)
         a = pool.starmap(self.extract_image, zip(itertools.repeat(input_path, nb_runs), itertools.repeat(output_path, nb_runs),
-                                                 itertools.repeat(supplements_path, nb_runs), indexes))
+                                                 itertools.repeat(supplements_path, nb_runs), indexes, itertools.repeat(True, nb_runs)))
         pool.close()
         pool.join()
 
-    def extract_image(self, input_path, output_path, supplements_path, image_nb):
+    def extract_image(self, input_path, output_path, supplements_path, image_nb, save=True):
         current = Image.open(os.path.join(input_path, "in{0:06d}.jpg".format(image_nb)))
         new_data = MosaicImage(current, self.image_parameters)
         self.som.set_data(new_data.get_data())
@@ -76,19 +92,19 @@ class SaliencyGenerator:
         som_difference_modulated = ImageChops.multiply(som_difference, diff_winners)
 
         # Binarizing
-        thresh = 10
-        fn = lambda x: 255 if x > thresh else 0
+        fn = lambda x: 255 if x > self.threshold else 0
         thresholded = som_difference_modulated.convert('L').point(fn, mode='1')
 
         result = ImageChops.multiply(thresholded, self.mask)
 
         # Saving
-        som_difference.save(os.path.join(supplements_path, "difference", "dif{0:06d}.png".format(image_nb)))
-        diff_winners.save(os.path.join(supplements_path, "diff_winners", "win{0:06d}.png".format(image_nb)))
-        som_difference_modulated.save(os.path.join(supplements_path, "saliency", "sal{0:06d}.png".format(image_nb)))
-        thresholded.save(os.path.join(supplements_path, "thresholded", "thr{0:06d}.png".format(image_nb)))
+        if save:
+            som_difference.save(os.path.join(supplements_path, "difference", "dif{0:06d}.png".format(image_nb)))
+            diff_winners.save(os.path.join(supplements_path, "diff_winners", "win{0:06d}.png".format(image_nb)))
+            som_difference_modulated.save(os.path.join(supplements_path, "saliency", "sal{0:06d}.png".format(image_nb)))
+            thresholded.save(os.path.join(supplements_path, "thresholded", "thr{0:06d}.png".format(image_nb)))
 
-        result.save(os.path.join(output_path, "bin{0:06d}.png".format(image_nb)))
+            result.save(os.path.join(output_path, "bin{0:06d}.png".format(image_nb)))
 
 
 if __name__ == '__main__':
