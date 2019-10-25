@@ -19,10 +19,10 @@ class Comparator:
         self.tn = 0
         self.nbShadowErrors = 0
 
-    def evaluate_all(self, cdnet_path, output_path, step=50):
+    def evaluate_all(self, cdnet_path, output_path, categories_list):
         fmeasures = []
         categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
-        for cat in categories:
+        for cat in list(categories[i] for i in categories_list):
             elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
             for elem in elements:
                 os.makedirs(os.path.join(output_path, 'results', cat, elem), exist_ok=True)

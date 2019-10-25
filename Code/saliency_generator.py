@@ -10,16 +10,30 @@ from Data.Mosaic_Image import MosaicImage
 
 np.set_printoptions(threshold=np.inf)
 
+
 class SaliencyGenerator:
 
-    def __init__(self, input_path, output_path, supplements_path, temporal_ROI, mask_ROI, threshold = 100):
+    def __init__(self, input_path, output_path, supplements_path, temporal_ROI, mask_ROI, parameters=None):
         self.bkg = Image.open(os.path.join(input_path, "bkg.jpg"))
         self.mask = mask_ROI
         self.input_path = input_path
         self.output_path = output_path
         self.supplements_path = supplements_path
         self.temporal_ROI = temporal_ROI
-        self.threshold = threshold
+
+        if parameters is None:
+            parameters = Parameters()
+        self.neurons_nb = parameters["neurons_nbr"] if parameters["neurons_nbr"] is not None else (10, 10)
+        self.pictures_dim = parameters["pictures_dim"] if parameters["pictures_dim"] is not None else [10, 10]
+        self.nb_epochs = parameters["nb_epochs"] if parameters["nb_epochs"] is not None else 50
+
+        self.alpha_start = parameters["alpha_start"] if parameters["alpha_start"] is not None else 0.09
+        self.alpha_end = parameters["alpha_end"] if parameters["alpha_end"] is not None else 0.22
+        self.sigma_start = parameters["sigma_start"] if parameters["sigma_start"] is not None else 0.94
+        self.sigma_end = parameters["sigma_end"] if parameters["sigma_end"] is not None else 0.56
+
+        self.threshold = parameters["threshold"] if parameters["threshold"] is not None else 10
+        self.step = parameters["step"] if parameters["step"] is not None else 30
 
     def generate_all(self):
         print("[Learning--", end='', flush=True)
@@ -28,33 +42,31 @@ class SaliencyGenerator:
         self.generate(self.input_path, self.output_path, self.supplements_path, self.temporal_ROI)
         print("--Finished]", flush=True)
 
-    def optimize(self, step=30):
+    def optimize(self):
         os.makedirs(os.path.join(self.supplements_path, "difference"), exist_ok=True)
         os.makedirs(os.path.join(self.supplements_path, "diff_winners"), exist_ok=True)
         os.makedirs(os.path.join(self.supplements_path, "saliency"), exist_ok=True)
         os.makedirs(os.path.join(self.supplements_path, "thresholded"), exist_ok=True)
 
         self.learning(self.bkg)
-        indexes = range(self.temporal_ROI[0], self.temporal_ROI[1]+1, step)
+        indexes = range(self.temporal_ROI[0], self.temporal_ROI[1]+1, self.step)
         nb_runs = len(indexes)
         for i in indexes:
             self.extract_image(self.input_path, self.output_path, self.supplements_path, i)
 
     def learning(self, bkg_image):
         # PARAMETERS
-        self.pictures_dim = [10, 10]
-        nb_epochs = 50
         self.image_parameters = Parameters({"pictures_dim": self.pictures_dim})
         data = MosaicImage(bkg_image, self.image_parameters)
-        inputs_SOM = Parameters({"alpha": Variable(start=0.5, end=0.25, nb_steps=nb_epochs),
-                                 "sigma": Variable(start=0.1, end=0.03, nb_steps=nb_epochs),
+        inputs_SOM = Parameters({"alpha": Variable(start=self.alpha_start, end=self.alpha_end, nb_steps=self.nb_epochs),
+                                 "sigma": Variable(start=self.sigma_start, end=self.sigma_end, nb_steps=self.nb_epochs),
                                  "data": data.get_data(),
-                                 "neurons_nbr": (10, 10),
-                                 "epochs_nbr": nb_epochs})
+                                 "neurons_nbr": self.neurons_nb,
+                                 "epochs_nbr": self.nb_epochs})
         self.som = SOM(inputs_SOM)
 
         # RUN
-        for i in range(nb_epochs):
+        for i in range(self.nb_epochs):
             # print('Epoch', i)
             self.som.run_epoch()
         self.initial_map = self.som.get_all_winners()

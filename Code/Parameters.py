@@ -32,7 +32,9 @@ class Parameters:
         self.data = dictionary
 
     def __getitem__(self, item):
-        return copy.deepcopy(self.data[item])
+        if item in self.data:
+            return copy.deepcopy(self.data[item])
+        return None
 
     def __setitem__(self, key, value):
         self.data[key] = copy.deepcopy(value)
