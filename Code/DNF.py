@@ -1,71 +1,98 @@
-from Code.Stimulus import *
+import numpy as np
 from scipy import signal
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+
+def euclidean_dist(x, y):
+    return np.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
+
+
+def gaussian(distance, sigma):
+    return np.exp(-(distance / sigma) ** 2 / 2)
+
+
+def gaussian_distribution(position, size, sigma):
+    result = np.empty(size)
+    for i in range(size[0]):
+        for j in range(size[1]):
+            current = (i / size[0], j / size[1])
+            result[i, j] = gaussian(euclidean_dist(position, current), sigma)
+    return result
 
 
 class DNF:
-    def __init__(self, inputs):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        print("Dnf size : ", width, ";", height)
+        self.dt = 0.2
+        self.tau = 1
+        self.cexc = 2
+        self.sexc = 0.033
+        self.cinh = 6
+        self.sinh = 0.001
+        self.h = -0.7
+        self.gi = 100
 
-        self.nb_steps = nb_steps  # start at the beginning
-        self.noise_amplitude = np.linspace(0, 0.5, 10)
-        self.input_stimulus = Stimulus(amplitude=1.0, position=(0.5, 0.5), radius=0.4, sigma=0.03)
-        self.squared_errors = []
-        # Optimized parameters are : dt_tau h Ap sp Am sm gi
-        self.dt = dt  # temporal discretisation (seconds).
-        self.tau = inputs["tau_dt"] * dt  # timescale
-        self.h = inputs["h"]  # resting level
-        self.Ap = inputs["Ap"]  # Amplitude for 2D difference-of-gaussian
-        self.Sp = inputs["Sp"]  # Spreading (sigma) for 2D difference-of-gaussian
-        self.Am = inputs["Am"]  # Amplitude for 2D difference-of-gaussian
-        self.Sm = inputs["Sm"]  # Spreading (sigma) for 2D difference-of-gaussian
-        self.gi = inputs["gi"]
+        self.input = np.zeros([width, height], dtype=float)
+        self.potentials = np.zeros([width, height], dtype=float)
+        self.lateral = np.zeros([width, height], dtype=float)
+        self.kernel = np.zeros([width * 2, height * 2], dtype=float)
 
-        self.width = width  # width of the field
-        self.height = height  # height of the field
-        self.dnf_shape = (width, height)
-        self.kernel = np.zeros([self.width * 2, self.height * 2], dtype=float)
-        self.convolution = np.zeros([self.width, self.height], dtype=float)
-        self.potentials = np.zeros([self.width, self.height], dtype=float)
-        self.in_stimulus = np.zeros([self.width, self.height], dtype=float)
+        self.kernel = (self.cexc * gaussian_distribution((0.5, 0.5), (self.width, self.height), self.sexc)) - (self.gi / (self.width * self.height)) \
+                      - (self.cinh * gaussian_distribution((0.5, 0.5), (self.width, self.height), self.sinh))
 
-        # Lateral interaction kernel K consists in a Difference of Gaussian
-        # which is a sum of excitatory and inhibitory weights (lateral weights)
-        # Here the interaction kernel is a DoG plus a global inhibition term to ensure monostable solution
-        self.kernel = (self.Ap * gaussian((self.width * 2, self.height * 2), self.Sp)) - (
-                    gi / (self.width * self.height)) - (self.Am * gaussian((self.width * 2, self.height * 2), self.Sm))
+        # for i in range(width*2):
+        #     for j in range(height*2):
+        #         d = np.sqrt(((i/(width*2)-0.5) ** 2 + ((j/(height*2)-0.5) ** 2))) / np.sqrt(0.5)
+        #         self.kernel[i, j] = self.difference_of_gaussian(d)
 
-    def set_input(self, in_stimulus):
-        self.in_stimulus = in_stimulus.copy()
+    def difference_of_gaussian(self, distance):
+        return self.cexc * np.exp(-(distance ** 2 / (2 * self.sexc ** 2))) - self.cinh * np.exp(-(distance ** 2 / (2 * self.sinh ** 2)))
 
-    # threshold potentials in range [0,1]
-    def normalize_potentials(self):
-        #         display("normalize potentials")
-        for index, value in np.ndenumerate(self.potentials):
-            if value > 1.0:
-                self.potentials[index] = 1.0
-            elif value < 0.0:
-                self.potentials[index] = 0.0
+    def optimized_DoG(self, x, y):
+        return self.kernel[np.abs(x[0] - y[0]), np.abs(x[1] - y[1])]
 
-    def run(self):
-        for noise in self.noise_amplitude:
-            for _ in range(self.nb_steps):
-                # set input with random noise for the DNF
-                self.input_stimulus.rotate_stimulus()
-                self.set_input(self.input_stimulus.get_data_with_random_noise(max_noise_amplitude=noise))
+    def gaussian_activity(self, a, b, sigma):
+        for i in range(self.width):
+            for j in range(self.height):
+                current = (i / self.width, j / self.height)
+                self.input[i, j] = gaussian(euclidean_dist(a, current), sigma) + gaussian(euclidean_dist(b, current), sigma)
 
-                # simulate the field dynamic
-                self.convolution = signal.fftconvolve(self.potentials, self.kernel, mode='same')
-                self.potentials += self.dt * (
-                            -self.potentials + self.h + self.convolution + self.in_stimulus) / self.tau
-                self.normalize_potentials()
+    def update_neuron(self, x):
+        # lateral = 0
+        # for i in range(self.width):
+        #     for j in range(self.height):
+        #         lateral += self.potentials[i, j]*self.optimized_DoG((i, j), x)
+        self.potentials[x] += self.dt * (-self.potentials[x] + self.h + self.lateral[x] + self.input[x]) / self.tau
+        if self.potentials[x] > 1:
+            self.potentials[x] = 1
+        elif self.potentials[x] < 0:
+            self.potentials[x] = 0
 
-                # compute the squared error for each sample
-                self.squared_error()
+    def update_map(self):
+        self.lateral = signal.fftconvolve(self.potentials, self.kernel, mode='same')
+        # self.lateral = np.divide(self.lateral, self.width*self.height)*40*40
 
-    def squared_error(self):
-        estimated_values = normalized_space_to_rate_code(self.potentials, self.dnf_shape)
-        real_values = normalized_space_to_rate_code(self.input_stimulus.get_stimulus(), self.input_stimulus.shape)
-        l1_norm = sum(absolute_error(real_values[i], estimated_values[i]) for i in range(len(estimated_values)))
-        self.squared_errors.append(l1_norm ** 2)
+        # print(self.lateral)
+        neurons_list = list(range(self.width * self.height))
+        np.random.shuffle(neurons_list)
+        for i in neurons_list:
+            self.update_neuron((i % self.width, i // self.width))
 
-    def mean_squared_error(self):
-        return np.mean(self.squared_errors)
+
+def updatefig(*args):
+    dnf.update_map()
+    im.set_array(dnf.potentials)
+    return im,
+
+
+if __name__ == '__main__':
+    fig = plt.figure()
+    dnf = DNF(80, 80)
+    dnf.gaussian_activity((0.1, 0.5), (0.9, 0.5), 0.1)
+    # plt.imshow(dnf.kernel)
+    im = plt.imshow(dnf.input, cmap='hot', interpolation='nearest', animated=True)
+    ani = animation.FuncAnimation(fig, updatefig, interval=100, blit=True)
+    plt.show()

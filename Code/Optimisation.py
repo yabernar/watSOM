@@ -1,7 +1,7 @@
 import itertools
 import time
 
-from Code.DNF import *
+from Code.DNF_adrien import *
 from Code.SOM import *
 import multiprocessing as mp
 

@@ -10,19 +10,19 @@ nb_steps = 100
 width = 100  # size of the field
 height = 100  # size of the field
 dnf_shape = (width, height)
-
-tau = 0.92 * dt
-# tau = 0.2*dt
-h = -0.7
-# Ap and Sp : Amplitude and sigma of positive gaussian
-Ap = 4.0
-Sp = 0.01
-# Am and Sm : Amplitude and sigma of negative gaussian
-Am = 2.0
-Sm = Sp / 3
-
-# global inhibition
-gi = 50
+#
+# tau = 0.92 * dt
+# # tau = 0.2*dt
+# h = -0.7
+# # Ap and Sp : Amplitude and sigma of positive gaussian
+# Ap = 0
+# Sp = 0
+# # Am and Sm : Amplitude and sigma of negative gaussian
+# Am = 0
+# Sm = Sp / 3
+#
+# # global inhibition
+# gi = 0
 
 
 # Version normalization discrete Gaussian
@@ -81,7 +81,7 @@ def space_to_rate_code(neuronal_population):
             return tuple(position)
         else:
             # print ("Warning : normalization constant = 0")
-            return tuple((None,) * neuronal_population.ndim)
+            return tuple((0.5,) * neuronal_population.ndim)
 
 
 def normalized_space_to_rate_code(neuronal_population, shape):

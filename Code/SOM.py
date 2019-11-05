@@ -1,3 +1,5 @@
+import time
+
 from Code.Parameters import Variable, Parameters
 from Code.Common_Functions import *
 from Data.Generated_Data import *
@@ -138,13 +140,20 @@ class SOM:
 
 
 if __name__ == '__main__':
+    start = time.time()
+
     nb_epochs = 50
     inputs = Parameters({"alpha": Variable(start=0.6, end=0.05, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.5, end=0.001, nb_steps=nb_epochs),
                          "data": sierpinski_carpet(200),
-                         "neurons_nbr": (10, 10, 3),
+                         "neurons_nbr": (10, 10),
                          "epochs_nbr": nb_epochs})
     som = SOM(inputs)
     som.run()
+
+    end = time.time()
+    print("Executed in " + str(end - start) + " seconds.")
     print(som.mean_error(som.get_all_winners()))
     print(som.square_error(som.get_all_winners()))
+
+
