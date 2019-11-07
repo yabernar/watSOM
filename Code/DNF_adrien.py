@@ -30,8 +30,8 @@ class DNF:
         self.Sm = inputs["Sm"]  # Spreading (sigma) for 2D difference-of-gaussian
         self.gi = inputs["gi"]
 
-        self.width = width  # width of the field
-        self.height = height  # height of the field
+        self.width = inputs["size"][0]  # width of the field
+        self.height = inputs["size"][1]  # height of the field
         self.dnf_shape = (width, height)
         self.kernel = np.zeros([self.width * 2, self.height * 2], dtype=float)
         self.convolution = np.zeros([self.width, self.height], dtype=float)
@@ -49,24 +49,30 @@ class DNF:
 
     # threshold potentials in range [0,1]
     def normalize_potentials(self):
-        #         display("normalize potentials")
+        # display("normalize potentials")
         for index, value in np.ndenumerate(self.potentials):
             if value > 1.0:
                 self.potentials[index] = 1.0
             elif value < 0.0:
                 self.potentials[index] = 0.0
 
-    def run_once(self):
+    def run_once(self, input=None):
         # set input with random noise for the DNF
-        self.input_stimulus.rotate_stimulus()
-        self.set_input(self.input_stimulus.get_data_with_random_noise(max_noise_amplitude=0.7))
+        if input is None:
+            self.input_stimulus.rotate_stimulus()
+            self.set_input(self.input_stimulus.get_data_with_random_noise(max_noise_amplitude=1))
+        else:
+            self.set_input(input)
 
         # simulate the field dynamic
         self.convolution = signal.fftconvolve(self.potentials, self.kernel, mode='same')
-        self.potentials += self.dt * (-self.potentials + self.h + self.convolution + self.in_stimulus) / self.tau
+        max = np.max(self.convolution)
+        if max > 0:
+            self.convolution = np.divide(self.convolution, max)
+        self.potentials += self.dt * (-self.potentials + self.h + self.convolution*0.5 + self.in_stimulus) / self.tau
         self.normalize_potentials()
 
-        self.pixels_diff_error()
+        # self.pixels_diff_error()
         # print(self.squared_error())
 
     def run(self):
@@ -122,15 +128,15 @@ def show():
                   "Sp": 0.0694,       # entre 0 et 1
                   "Am": 2.72,        # entre 1 et 10
                   "Sm": 0.1530,      # entre 0 et 1
-                  "gi": 5}        # entre 0 et 500
+                  "gi": 24}        # entre 0 et 500
 
-    # inputs_DNF = {"tau_dt": 0.94,   # entre 0 et 1
-    #               "h": -0.84,        # entre -1 et 0
-    #               "Ap": 7.3,        # entre 1 et 10
-    #               "Sp": 0.0306,       # entre 0 et 1
-    #               "Am": 9.8,        # entre 1 et 10
-    #               "Sm": 0.0213,      # entre 0 et 1
-    #               "gi": 497}        # entre 0 et 500
+    inputs_DNF = {"tau_dt": 0.8,   # entre 0 et 1
+                  "h": -0.6,        # entre -1 et 0
+                  "Ap": 1,        # entre 1 et 10
+                  "Sp": 0.01,       # entre 0 et 1
+                  "Am": 0,        # entre 1 et 10
+                  "Sm": 0.05,      # entre 0 et 1
+                  "gi": 2}        # entre 0 et 500
 
     dnf = DNF(inputs_DNF)
     plot = None
