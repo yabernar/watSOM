@@ -43,6 +43,9 @@ class DNF:
         # Here the interaction kernel is a DoG plus a global inhibition term to ensure monostable solution
         self.kernel = (self.Ap * gaussian((self.width * 2, self.height * 2), self.Sp)) - (
                     self.gi / (self.width * self.height)) - (self.Am * gaussian((self.width * 2, self.height * 2), self.Sm))
+        self.kernel = np.divide(self.kernel, np.sum(self.kernel))
+
+        print(np.sum(self.kernel))
 
     def set_input(self, in_stimulus):
         self.in_stimulus = in_stimulus.copy()
@@ -56,19 +59,19 @@ class DNF:
             elif value < 0.0:
                 self.potentials[index] = 0.0
 
-    def run_once(self, input=None):
+    def run_once(self, input = None):
         # set input with random noise for the DNF
         if input is None:
             self.input_stimulus.rotate_stimulus()
             self.set_input(self.input_stimulus.get_data_with_random_noise(max_noise_amplitude=1))
         else:
-            self.set_input(input)
+            self.in_stimulus = input
 
         # simulate the field dynamic
         self.convolution = signal.fftconvolve(self.potentials, self.kernel, mode='same')
-        max = np.max(self.convolution)
-        if max > 0:
-            self.convolution = np.divide(self.convolution, max)
+        # max = np.max(self.convolution)
+        # if max > 0:
+        #     self.convolution = np.divide(self.convolution, max)
         self.potentials += self.dt * (-self.potentials + self.h + self.convolution*0.5 + self.in_stimulus) / self.tau
         self.normalize_potentials()
 

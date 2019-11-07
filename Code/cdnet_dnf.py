@@ -10,7 +10,7 @@ pawcs_path = "/users/yabernar/GrosDisque/CDNET14/PAWCS"
 
 
 selected_category = 1
-selected_element = 1
+selected_element = 0
 
 categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
 categories_path = os.path.join(cdnet_path, categories[selected_category])
@@ -27,14 +27,14 @@ temporal_roi = (int(roi_file[0]), int(roi_file[1]))
 plot = None
 bkg = Image.open(os.path.join(elements_path, "input", "bkg.jpg"))
 
-inputs_DNF = {"size": (240, 360),
-              "tau_dt": 0.4,  # entre 0 et 1
-              "h": -0.6,  # entre -1 et 0
-              "Ap": 1,  # entre 1 et 10
-              "Sp": 0.2,  # entre 0 et 1
+inputs_DNF = {"size": (240, 320),
+              "tau_dt": 0.2,  # entre 0 et 1
+              "h": -0.1,  # entre -1 et 0
+              "Ap": 5,  # entre 1 et 10
+              "Sp": 0.06,  # entre 0 et 1
               "Am": 0,  # entre 1 et 10
-              "Sm": 0.05,  # entre 0 et 1
-              "gi": 0.1}  # entre 0 et 500
+              "Sm": 1,  # entre 0 et 1
+              "gi": 1}  # entre 0 et 500
 dnf = DNF(inputs_DNF)
 
 ############
@@ -55,7 +55,7 @@ for i in range(temporal_roi[0], temporal_roi[1], 1):
     fn = lambda x: 255 if x > thresh else 0
     bgs_thresholded = bgs_difference.convert('L').point(fn, mode='1')
 
-    dnf_inputs = np.asarray(difference)
+    dnf_inputs = np.asarray(saliency)
     dnf_inputs = np.divide(dnf_inputs, np.max(dnf_inputs))
     dnf.run_once(dnf_inputs)
     dnf_activation = dnf.potentials
@@ -71,7 +71,7 @@ for i in range(temporal_roi[0], temporal_roi[1], 1):
         plt.subplot(3, 2, 4)
         plot.append(plt.imshow(dnf_activation))
         plt.subplot(3, 2, 5)
-        plot.append(plt.imshow(np.asarray(dnf.convolution)))
+        plot.append(plt.imshow(dnf.kernel))
         plt.subplot(3, 2, 6)
         plot.append(plt.imshow(dnf.in_stimulus))
     else:
@@ -79,8 +79,8 @@ for i in range(temporal_roi[0], temporal_roi[1], 1):
         plot[1].set_data(truth)
         plot[2].set_data(saliency)
         plot[3].set_data(dnf_activation)
-        plot[4].set_data(np.asarray(dnf.convolution))
-        plot[5].set_data(dnf.in_stimulus)
-    plt.pause(0.01)
+        plot[4].set_data(dnf.kernel)
+        plot[5].set_data(dnf_inputs)
     plt.draw()
+    plt.pause(0.01)
 plt.waitforbuttonpress()
