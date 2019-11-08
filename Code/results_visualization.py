@@ -7,8 +7,8 @@ output_path = "/users/yabernar/GrosDisque/CDNET14/saliency"
 pawcs_path = "/users/yabernar/GrosDisque/CDNET14/PAWCS"
 
 
-selected_category = 10
-selected_element = 3
+selected_category = 3
+selected_element = 2
 
 categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
 categories_path = os.path.join(cdnet_path, categories[selected_category])

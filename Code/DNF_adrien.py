@@ -41,11 +41,9 @@ class DNF:
         # Lateral interaction kernel K consists in a Difference of Gaussian
         # which is a sum of excitatory and inhibitory weights (lateral weights)
         # Here the interaction kernel is a DoG plus a global inhibition term to ensure monostable solution
-        self.kernel = (self.Ap * gaussian((self.width * 2, self.height * 2), self.Sp)) - (
-                    self.gi / (self.width * self.height)) - (self.Am * gaussian((self.width * 2, self.height * 2), self.Sm))
-        self.kernel = np.divide(self.kernel, np.sum(self.kernel))
-
-        print(np.sum(self.kernel))
+        self.excitation_kernel = gaussian((self.width * 2, self.height * 2), self.Sp)
+        self.excitation_kernel = np.divide(self.excitation_kernel, np.sum(self.excitation_kernel))
+        self.kernel = (self.Ap * self.excitation_kernel) - (self.gi / (self.width * self.height)) - (self.Am * gaussian((self.width * 2, self.height * 2), self.Sm))
 
     def set_input(self, in_stimulus):
         self.in_stimulus = in_stimulus.copy()

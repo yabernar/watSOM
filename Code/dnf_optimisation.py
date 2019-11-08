@@ -14,6 +14,7 @@ from Code.saliency_generator import SaliencyGenerator
 
 np.set_printoptions(threshold=np.inf)
 
+cdnet_path = "/users/yabernar/GrosDisque/CDNET14/dataset/"
 input_path = "/users/yabernar/GrosDisque/CDNET14/saliency_as/supplements/"
 output_path = "/users/yabernar/GrosDisque/CDNET14/optimisation"
 Processing = DNFGenerator
@@ -25,7 +26,7 @@ def evaluate(args):
     print("Tested params : {}".format(params.data))
 
     all_videos = []
-    categories_list = [1, 3]
+    categories_list = [1]
     categories = sorted([d for d in os.listdir(input_path) if os.path.isdir(os.path.join(input_path, d))], key=str.lower)
     for cat in list(categories[i] for i in categories_list):
         elements = sorted([d for d in os.listdir(os.path.join(input_path, cat)) if os.path.isdir(os.path.join(input_path, cat, d))], key=str.lower)
@@ -33,12 +34,12 @@ def evaluate(args):
             all_videos.append(os.path.join(cat, elem))
 
     pool = mp.Pool(8)
-    results = pool.starmap(process_video, zip(all_videos, itertools.repeat(params)))
-    print(results)
+    pool.starmap(process_video, zip(all_videos, itertools.repeat(params)))
     pool.close()
     pool.join()
 
-    fitness = np.mean(np.asarray(results))
+    cmp = Comparator()
+    fitness = 1 - cmp.evaluate_all(cdnet_path, output_path, categories_list)
 
     print("Measured fitness : {}\n".format(fitness))
     return fitness
@@ -46,7 +47,7 @@ def evaluate(args):
 
 def process_video(video, params):
     os.makedirs(os.path.join(output_path, 'results', video), exist_ok=True)
-    current_path = os.path.join(input_path, video, "supplements", "saliency")
+    current_path = os.path.join(input_path, video, "saliency")
     pr = Processing(current_path, os.path.join(output_path, 'results', video), os.path.join(output_path, 'supplements', video), parameters=params)
     pr.optimize()
 
@@ -55,7 +56,7 @@ if __name__ == '__main__':
     tpe_trials = Trials()
 
     space_dnf = (hp.uniform('tau_dt', 0.0001, 1), hp.uniform('h', -1, 0), hp.uniform('gi', 0, 10), hp.uniform('excitation_amplitude', 0.0001, 5), hp.uniform('excitation_sigma', 0.0001, 1))
-    best = fmin(evaluate, space_dnf, algo=tpe.suggest, trials=tpe_trials, max_evals=120)
+    best = fmin(evaluate, space_dnf, algo=tpe.suggest, trials=tpe_trials, max_evals=700)
 
     full_results = pd.DataFrame({'loss': [x['loss'] for x in tpe_trials.results],
                                 'iteration': tpe_trials.idxs_vals[0]['tau_dt'],

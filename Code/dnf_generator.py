@@ -35,12 +35,12 @@ class DNFGenerator:
         self.step = parameters["step"] if parameters["step"] is not None else 1
 
     def optimize(self):
-        os.makedirs(os.path.join(self.supplements_path, "dnf_potentials"), exist_ok=True)
+        os.makedirs(os.path.join(self.supplements_path, "dnf_activation"), exist_ok=True)
 
         images_list = sorted([d for d in os.listdir(self.input_path)], key=str.lower)
-        first = Image.open(images_list[0])
-        start = int(first[8:-4])
-        inputs_DNF = {"size": first.size,
+        first = Image.open(os.path.join(self.input_path, images_list[0]))
+        start = int(images_list[0][3:-4])
+        inputs_DNF = {"size": np.flip(first.size),
                       "tau_dt": self.tau_dt,  # entre 0 et 1
                       "h": self.h,  # entre -1 et 0
                       "Ap": self.excitation_amplitude,  # entre 1 et 10
@@ -50,11 +50,11 @@ class DNFGenerator:
                       "gi": self.gi}  # entre 0 et 10
         dnf = DNF(inputs_DNF)
 
-        for i in range(len(images_list), self.step):
-            saliency = Image.open(images_list[i])
+        for i in range(0, len(images_list), self.step):
+            saliency = Image.open(os.path.join(self.input_path, images_list[i]))
             dnf_inputs = np.asarray(saliency)
             dnf.run_once(dnf_inputs)
-            dnf_activation = Image.fromarray(dnf.potentials)
+            dnf_activation = Image.fromarray(dnf.potentials*255).convert("L")
 
             # Binarizing
             fn = lambda x: 255 if x > self.threshold else 0
