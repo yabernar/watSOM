@@ -20,10 +20,8 @@ Processing = DNFGenerator
 
 
 def evaluate(args):
-    # pic_dim, neuron_nbr, epochs = args
-    # params = Parameters({"pictures_dim": [int(pic_dim), int(pic_dim)], "neurons_nbr": (int(neuron_nbr), int(neuron_nbr)), "epochs_nbr": int(epochs)})
-    alpha_start, alpha_end, sigma_start, sigma_end = args
-    params = Parameters({"alpha_start": alpha_start, "alpha_end": alpha_end, "sigma_start": sigma_start, "sigma_end": sigma_end})
+    tau_dt, h, gi, Ap, Sp = args
+    params = Parameters({"tau_dt": tau_dt, "h": h, "gi": gi, "excitation_amplitude": Ap, "excitation_sigma": Sp})
     print("Tested params : {}".format(params.data))
 
     all_videos = []
@@ -48,31 +46,25 @@ def evaluate(args):
 
 def process_video(video, params):
     os.makedirs(os.path.join(output_path, 'results', video), exist_ok=True)
-    current_path = os.path.join(input_path, video, "saliency")
+    current_path = os.path.join(input_path, video, "supplements", "saliency")
     pr = Processing(current_path, os.path.join(output_path, 'results', video), os.path.join(output_path, 'supplements', video), parameters=params)
     pr.optimize()
 
 
 if __name__ == '__main__':
     tpe_trials = Trials()
-    # space_init = (hp.quniform('picture_dims', 5, 20, 1), hp.quniform('neurons_nbr', 8, 16, 1), hp.quniform('nb_epochs', 30, 100, 10))
-    space_learning = (hp.uniform('alpha_start', 0, 1), hp.uniform('alpha_end', 0, 1), hp.uniform('sigma_start', 0, 1), hp.uniform('sigma_end', 0, 1))
-    best = fmin(evaluate, space_learning, algo=tpe.suggest, trials=tpe_trials, max_evals=120)
+
+    space_dnf = (hp.uniform('tau_dt', 0.0001, 1), hp.uniform('h', -1, 0), hp.uniform('gi', 0, 10), hp.uniform('excitation_amplitude', 0.0001, 5), hp.uniform('excitation_sigma', 0.0001, 1))
+    best = fmin(evaluate, space_dnf, algo=tpe.suggest, trials=tpe_trials, max_evals=120)
 
     full_results = pd.DataFrame({'loss': [x['loss'] for x in tpe_trials.results],
-                                'iteration': tpe_trials.idxs_vals[0]['alpha_start'],
-                                'alpha_start': tpe_trials.idxs_vals[1]['alpha_start'],
-                                'alpha_end': tpe_trials.idxs_vals[1]['alpha_end'],
-                                'sigma_start': tpe_trials.idxs_vals[1]['sigma_start'],
-                                'sigma_end': tpe_trials.idxs_vals[1]['sigma_end']})
-    full_results.to_csv(os.path.join(output_path, "basic_alpha_sigma.csv"))
+                                'iteration': tpe_trials.idxs_vals[0]['tau_dt'],
+                                'tau_dt': tpe_trials.idxs_vals[1]['tau_dt'],
+                                'h': tpe_trials.idxs_vals[1]['h'],
+                                'gi': tpe_trials.idxs_vals[1]['gi'],
+                                'excitation_amplitude': tpe_trials.idxs_vals[1]['excitation_amplitude'],
+                                'excitation_sigma': tpe_trials.idxs_vals[1]['excitation_sigma']})
+    full_results.to_csv(os.path.join(output_path, "dnf_cdnet.csv"))
 
-    # full_results = pd.DataFrame({'loss': [x['loss'] for x in tpe_trials.results],
-    #                              'iteration': tpe_trials.idxs_vals[0]['picture_dims'],
-    #                              'picture_dims': tpe_trials.idxs_vals[1]['picture_dims'],
-    #                              'neurons_nbr': tpe_trials.idxs_vals[1]['neurons_nbr'],
-    #                              'nb_epochs': tpe_trials.idxs_vals[1]['nb_epochs']})
-    # full_results.to_csv(os.path.join(output_path, "sizing_hyperparameters.csv"))
-
-    # print(best)
-    # print(space_eval(space_learning, best))
+    print(best)
+    print(space_eval(space_dnf, best))
