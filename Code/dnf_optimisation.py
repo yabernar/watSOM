@@ -9,13 +9,14 @@ from hyperopt import hp, fmin, tpe, space_eval, Trials
 
 from Code.Parameters import Parameters
 from Code.cdnet_evaluation import Comparator
+from Code.dnf_generator import DNFGenerator
 from Code.saliency_generator import SaliencyGenerator
 
 np.set_printoptions(threshold=np.inf)
 
 input_path = "/users/yabernar/GrosDisque/CDNET14/saliency_as/supplements/"
 output_path = "/users/yabernar/GrosDisque/CDNET14/optimisation"
-Processing = SaliencyGenerator
+Processing = DNFGenerator
 
 
 def evaluate(args):
