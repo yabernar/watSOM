@@ -1,10 +1,12 @@
 import numpy as np
 
 
-# Random data in [0,1]^d
+# Random data in [0, 0.8]^d
 def uniform(nbr_elements, dimension):
-    data = np.array([np.random.random(dimension) for i in range(nbr_elements)])
+    data = np.array([np.random.random(dimension)*0.8 for i in range(nbr_elements)])
     return data
+
+#
 
 
 # Random distribution following a fractal shape.

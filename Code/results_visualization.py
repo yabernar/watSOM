@@ -3,12 +3,12 @@ from PIL import Image, ImageChops
 import matplotlib.pyplot as plt
 
 cdnet_path = "/users/yabernar/GrosDisque/CDNET14/dataset"
-output_path = "/users/yabernar/GrosDisque/CDNET14/saliency"
+output_path = "/users/yabernar/GrosDisque/CDNET14/saliency_as"
 pawcs_path = "/users/yabernar/GrosDisque/CDNET14/PAWCS"
 
 
-selected_category = 3
-selected_element = 2
+selected_category = 1
+selected_element = 0
 
 categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
 categories_path = os.path.join(cdnet_path, categories[selected_category])
