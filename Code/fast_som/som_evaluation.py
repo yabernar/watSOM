@@ -4,14 +4,17 @@ import pandas as pd
 import multiprocessing as mp
 
 from Code.Parameters import Parameters, Variable
+from Code.fast_som.FourCornersSOM import FourCornersSOM
+from Code.fast_som.SwarmSOM import SwarmSOM
 from Code.fast_som.GreedySOM import GreedySOM
 from Code.fast_som.StandardSOM import StandardSOM
 from Data.Generated_Data import sierpinski_carpet, uniform
 
 
 # PARAMETERS
-som_algs = {"standard": StandardSOM, "greedy": GreedySOM}
+som_algs = {"standard": StandardSOM, "greedy": GreedySOM, "swarm": SwarmSOM, "fourCorners": FourCornersSOM}
 data_types = {"uniform2D": uniform(500, 2), "uniform3D": uniform(500, 3)}
+neuron_number = {"small": (10, 10), "medium": (32, 32), "rectangular": (64, 16)}
 nb_epochs = 20
 
 
@@ -56,3 +59,15 @@ if __name__ == '__main__':
 
     full_results = pd.DataFrame(results)
     print(full_results)
+#
+#       MSDtN    MSQE_L    MSQE_R algorithm  data_type
+# 0  0.000128  0.000146  0.000151  standard  uniform2D
+# 1  0.000288  0.001616  0.001689  standard  uniform3D
+# 2  0.000128  0.000151  0.000141    greedy  uniform2D
+# 3  0.000735  0.019616  0.032234    greedy  uniform3D
+# 4  0.002248  0.000498  0.000495    swarm2  uniform2D
+# 5  0.009173  0.008775  0.012537    swarm2  uniform3D
+# 6  0.002186  0.000520  0.000510    swarm3  uniform2D
+# 7  0.007716  0.006308  0.007920    swarm3  uniform3D
+# 8  0.002183  0.000505  0.000525    swarm4  uniform2D
+# 9  0.005798  0.005395  0.004644    swarm4  uniform3D

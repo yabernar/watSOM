@@ -2,10 +2,11 @@ import time
 
 from Code.Parameters import Variable, Parameters
 from Code.Common_Functions import *
+from Code.fast_som.StandardSOM import StandardSOM
 from Data.Generated_Data import *
 
 
-class GreedySOM:
+class FourCornersSOM:
     def __init__(self, parameters):
         # Parameters
         self.alpha = parameters["alpha"]
@@ -23,8 +24,32 @@ class GreedySOM:
         self.max_iterations = self.epochs_nbr * self.data.shape[0]
 
     def winner(self, vector):
+        starting_positions = [(0, 0), (self.neurons_nbr[0]-1, 0), (0, self.neurons_nbr[1]-1), (self.neurons_nbr[0]-1, self.neurons_nbr[1]-1)]
+        best = np.inf
+        bmu = (0, 0)
+        for i in starting_positions:
+            current = self.particle(vector, i)
+            value = quadratic_distance(self.neurons[current], vector)
+            # print(value, best)
+            if value < best:
+                best = value
+                bmu = current
+        # print(quadratic_distance(self.neurons[self.real_bmu(vector)], vector))
+        # print("---")
+        # self.show_distance_to_input(vector)
+        return bmu
+
+    def real_bmu(self, vector):
+        dist = np.empty(self.neurons_nbr, dtype=float)
+        for i in np.ndindex(dist.shape):
+            dist[i] = quadratic_distance(self.neurons[i], vector)
+        #            dist[i] = fast_ied(self.neurons[i], vector)
+        self.distance_to_input = dist
+        return np.unravel_index(np.argmin(dist, axis=None), dist.shape)  # Returning the Best Matching Unit's index.
+
+    def particle(self, vector, start):
         cont = True
-        bmu = (np.random.randint(0, self.neurons_nbr[0]), np.random.randint(0, self.neurons_nbr[1]))
+        bmu = start
         best = quadratic_distance(self.neurons[bmu], vector)
         while cont:
             cont = False
@@ -45,10 +70,43 @@ class GreedySOM:
                     bmu = i
         return bmu
 
+    def gradient(self, dist, i):
+        neighbors = []
+        best = dist[i]
+        res = "*"  # "🡱🡲🡰🡳"
+        if i[0] < self.neurons_nbr[0] - 1 and dist[i[0]+1, i[1]] < best:
+            res = "🡳"
+            best = dist[i[0]+1, i[1]]
+        if i[0] > 0 and dist[i[0]-1, i[1]] < best:
+            res = "🡱"
+            best = dist[i[0]-1, i[1]]
+        if i[1] < self.neurons_nbr[1] - 1 and dist[i[0], i[1] + 1] < best:
+            res = "🡲"
+            best = dist[i[0], i[1] + 1]
+        if i[1] > 0 and dist[i[0], i[1] - 1] < best:
+            res = "🡰"
+        return res
+
+    def show_distance_to_input(self, vector):
+        self.real_bmu(vector)
+        symbols_array = np.array(self.distance_to_input, dtype=str)
+        for i in np.ndindex(self.distance_to_input.shape):
+            symbols_array[i] = self.gradient(self.distance_to_input, i)
+        with np.printoptions(precision=3, suppress=True):
+            print(self.distance_to_input)
+            print(symbols_array)
+        print("----")
+
     def get_all_winners(self):
         winners_list = np.zeros(self.data.shape[0], dtype=tuple)  # list of BMU for each corresponding training vector
+        error = 0
         for i in np.ndindex(winners_list.shape):
-            winners_list[i] = self.winner(self.data[i])
+            win = self.winner(self.data[i])
+            # real = self.real_bmu(self.data[i])
+            # if real != win:
+            #     error += 1
+            winners_list[i] = win
+        # print("Error number :", error)
         return winners_list
 
     def run_iteration(self):
@@ -75,6 +133,7 @@ class GreedySOM:
     def run(self):
         for i in range(self.epochs_nbr):
             self.run_epoch()
+            # self.get_all_winners()
 
     def updating_weights(self, bmu, vector):
         for i in np.ndindex(self.neurons_nbr):
@@ -119,17 +178,33 @@ if __name__ == '__main__':
     nb_epochs = 50
     inputs = Parameters({"alpha": Variable(start=0.6, end=0.05, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.5, end=0.2, nb_steps=nb_epochs),
-                         "data": uniform(200, 3),
+                         "data": uniform(500, 3),
                          "neurons_nbr": (10, 10),
                          "epochs_nbr": nb_epochs})
-    som = GreedySOM(inputs)
+    som = StandardSOM(inputs)
     som.run()
+
+    som2 = FourCornersSOM(inputs)
+    som2.neurons = som.neurons
 
     end = time.time()
     print("Executed in " + str(end - start) + " seconds.")
+    print(som2.mean_square_quantization_error())
+    print(som2.mean_square_distance_to_neighbour())
     print(som.mean_square_quantization_error())
     print(som.mean_square_distance_to_neighbour())
 
 
-# 2  0.000128  0.000151  0.000141    greedy  uniform2D
-# 3  0.000735  0.019616  0.032234    greedy  uniform3D
+
+# Greedy version
+# Executed in 35.336950063705444 seconds.
+# Error number : 2
+# 0.006957003023363543
+# 0.0008217259676531524
+
+# 2 Particles version
+# Executed in 43.82865118980408 seconds.
+# Error number : 5
+# 0.006915441761639167
+# 0.0008292244498239905
+#
