@@ -5,6 +5,7 @@ import numpy as np
 
 from Code.Parameters import Parameters, Variable
 from Code.SOM import SOM, manhattan_distance
+from Code.fast_som.FourCornersSOM import FourCornersSOM
 from Data.Mosaic_Image import MosaicImage
 
 path = "/users/yabernar/GrosDisque/CDNET14"

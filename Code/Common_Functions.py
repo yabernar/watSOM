@@ -25,14 +25,19 @@ for i in range(kernel_size[0]):
 # kernel.flatten()
 
 
-def quadratic_distance(x, y):
-    assert np.array_equal(np.array(x.shape), np.array(y.shape))
-    return np.sum((x - y) ** 2)
+def quadratic_distance(a, b):
+    assert np.array_equal(np.array(a.shape), np.array(b.shape))
+    return np.sum((a - b) ** 2)
 
 
-def manhattan_distance(x, y):
-    return np.sum(np.abs(np.array(x) - np.array(y)))
+def manhattan_distance(a, b):
+    return np.sum(np.abs(np.array(a) - np.array(b)))
 
+
+def toroidal_distance(a, b, dimensions):
+    direct = np.abs(np.array(a) - np.array(b))
+    indirect = dimensions - direct
+    return np.sum(np.minimum(direct, indirect))
 
 def oddr_to_cube(hex):
     x = hex[0] - (hex[1] - (hex[1]&1)) // 2
