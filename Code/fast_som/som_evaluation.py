@@ -91,3 +91,21 @@ if __name__ == '__main__':
 # 6  0.000446  0.000588  0.000583        standard     images
 # 7  0.000694  0.001655  0.001098     fourCorners     images
 # 8  0.001852  0.002310  0.002205  greedyToroidal     images
+
+# 10x10 SOM and IMG
+#       MSDtN    MSQE_L    MSQE_R    algorithm  data_type
+# 0  0.002278  0.000507  0.000519     standard  uniform2D
+# 1  0.002269  0.000516  0.000525  fourCorners  uniform2D
+# 2  0.005134  0.002480  0.002579     standard  uniform3D
+# 3  0.004739  0.002580  0.002485  fourCorners  uniform3D
+# 4  0.002307  0.001851  0.001844     standard     images
+# 5  0.002308  0.001824  0.001867  fourCorners     images
+
+# 24*24 SOM and 4x4 IMG
+#       MSDtN    MSQE_L    MSQE_R    algorithm  data_type
+# 0  0.000359  0.000214  0.000221     standard  uniform2D
+# 1  0.000360  0.000214  0.000217  fourCorners  uniform2D
+# 2  0.000828  0.001780  0.001736     standard  uniform3D
+# 3  0.000833  0.001885  0.002127  fourCorners  uniform3D
+# 4  0.000451  0.000584  0.000587     standard     images
+# 5  0.000567  0.001100  0.000729  fourCorners     images
