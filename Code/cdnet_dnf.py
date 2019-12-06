@@ -29,13 +29,13 @@ bkg = Image.open(os.path.join(elements_path, "input", "bkg.jpg"))
 
 # {'excitation_amplitude': 0.010050720581734826, 'excitation_sigma': 0.1953407394570799, 'gi': 8.300581108682309, 'h': -0.9998947111469659, 'tau_dt': 0.04282988446875408}
 inputs_DNF = {"size": (240, 320),
-              "tau_dt": 0.0428,  # entre 0 et 1
-              "h": -0.999,  # entre -1 et 0
-              "Ap": 0.01,  # entre 1 et 10
-              "Sp": 0.1953,  # entre 0 et 1
-              "Am": 0,  # entre 1 et 10
-              "Sm": 1,  # entre 0 et 1
-              "gi": 8.3006}  # entre 0 et 500
+              "tau_dt": 4.28,  # entre 0 et 1
+              "h": 0,  # entre -1 et 0
+              "Ap": 3,  # entre 1 et 10
+              "Sp": 0.05,  # entre 0 et 1
+              "Am": 2,  # entre 1 et 10
+              "Sm": 0.2,  # entre 0 et 1
+              "gi": 10}  # entre 0 et 500
 dnf = DNF(inputs_DNF)
 
 ############

@@ -42,7 +42,8 @@ class DNF:
         # which is a sum of excitatory and inhibitory weights (lateral weights)
         # Here the interaction kernel is a DoG plus a global inhibition term to ensure monostable solution
         self.excitation_kernel = gaussian((self.width * 2, self.height * 2), self.Sp)
-        self.excitation_kernel = np.divide(self.excitation_kernel, np.sum(self.excitation_kernel))
+        # self.excitation_kernel = np.divide(self.excitation_kernel, np.sum(self.excitation_kernel))
+        print(np.sum(self.excitation_kernel))
         self.kernel = (self.Ap * self.excitation_kernel) - (self.gi / (self.width * self.height)) - (self.Am * gaussian((self.width * 2, self.height * 2), self.Sm))
 
     def set_input(self, in_stimulus):
@@ -70,7 +71,14 @@ class DNF:
         # max = np.max(self.convolution)
         # if max > 0:
         #     self.convolution = np.divide(self.convolution, max)
-        self.potentials += self.dt * (-self.potentials + self.h + self.convolution*0.5 + self.in_stimulus) / self.tau
+        if self.potentials.any() > 0.01:
+            print(self.potentials)
+            print(self.h)
+            print(np.max(self.convolution))
+            print(self.in_stimulus)
+            print(self.dt, self.tau)
+
+        self.potentials += self.dt * (-self.potentials + self.h + self.convolution + self.in_stimulus*0.05) / self.tau
         self.normalize_potentials()
 
         # self.pixels_diff_error()
