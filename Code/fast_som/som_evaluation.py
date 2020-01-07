@@ -17,11 +17,16 @@ from Data.Mosaic_Image import MosaicImage
 # PARAMETERS
 
 # som_algs = {"standard": StandardSOM, "greedy": GreedySOM, "swarm": SwarmSOM, "fourCorners": FourCornersSOM, "greedyToroidal": GreedyToroidalSOM}
+from Data.Pixels_from_Image import PixelsFromImage
+
 som_algs = {"standard": StandardSOM, "fourCorners": FourCornersSOM}
-data_types = {"uniform2D": uniform(500, 2), "uniform3D": uniform(500, 3),
+data_types = {"uniform2D": uniform(500, 2),
+              "uniform3D": uniform(500, 3), "pixel_colors": PixelsFromImage(Image.open("/users/yabernar/workspace/watSOM/Code/fast_som/Elijah.png")),
               "images": MosaicImage(Image.open("/users/yabernar/workspace/watSOM/Code/fast_som/Elijah.png"), Parameters({"pictures_dim": [10, 10]})).get_data()}
 neuron_number = {"small": (10, 10), "medium": (32, 32), "rectangular": (64, 16)}
 nb_epochs = 20
+
+
 
 
 def evaluate_on_all(params):

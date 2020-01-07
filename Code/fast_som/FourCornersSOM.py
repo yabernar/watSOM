@@ -49,8 +49,8 @@ class FourCornersSOM:
                 bmu = current
         # print(quadratic_distance(self.neurons[self.real_bmu(vector)], vector))
         # print("---")
-        # if bmu != self.real_bmu(vector):
-        #     self.show_distance_to_input(vector)
+        if bmu != self.real_bmu(vector):
+            self.show_distance_to_input(vector)
         self.nbr_quad_dist.append(np.count_nonzero(self.dist_memory))
         return bmu
 
@@ -141,11 +141,11 @@ class FourCornersSOM:
         error = 0
         for i in np.ndindex(winners_list.shape):
             win = self.winner(self.data[i])
-            # real = self.real_bmu(self.data[i])
-            # if real != win:
-            #     error += 1
+            real = self.real_bmu(self.data[i])
+            if real != win:
+                error += 1
             winners_list[i] = win
-        # print("Error number :", error)
+        print("Error number :", error)
         return winners_list
 
     def run_iteration(self):
