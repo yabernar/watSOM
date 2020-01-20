@@ -4,9 +4,10 @@ from PIL import Image
 
 
 class PixelsFromImage:
-    def __init__(self, image):
+    def __init__(self, image, nb_elements=2000):
         self.data = None
         self.image = image
+        self.nb_elements = nb_elements
         self.create()
 
     def create(self):
@@ -15,6 +16,10 @@ class PixelsFromImage:
         pixels = np.array(self.image.getdata(), 'uint8')
         # print(pixels.shape)
         self.data = np.array(pixels, 'double') / 255
+        np.random.shuffle(self.data)
+        self.data.resize((self.nb_elements, 3))
+        # print(self.data.shape)
+        # print(self.data)
 
     def get_data(self):
         return self.data

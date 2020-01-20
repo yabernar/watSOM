@@ -30,11 +30,92 @@ class StandardSOM:
         self.distance_to_input = dist
         return np.unravel_index(np.argmin(dist, axis=None), dist.shape)  # Returning the Best Matching Unit's index.
 
+    def fast_winner(self, vector):
+        # self.real_bmu(vector)
+        # self.show_distance_to_input(vector)
+        self.dist_memory = np.zeros(self.neurons_nbr, dtype=float)
+        starting_positions = [(0, 0), (self.neurons_nbr[0]-1, 0), (0, self.neurons_nbr[1]-1), (self.neurons_nbr[0]-1, self.neurons_nbr[1]-1)]
+        best = np.inf
+        bmu = (0, 0)
+        for i in starting_positions:
+            current = self.particle(vector, i)
+            value = quadratic_distance(self.neurons[current], vector)
+            # print(value, best)
+            if value < best:
+                best = value
+                bmu = current
+        # print(quadratic_distance(self.neurons[self.real_bmu(vector)], vector))
+        # print("---")
+        # if bmu != self.real_bmu(vector):
+        #     self.show_distance_to_input(vector)
+        # self.nbr_quad_dist.append(np.count_nonzero(self.dist_memory))
+        return bmu
+
+    def particle(self, vector, start):
+        cont = True
+        bmu = start
+        best = quadratic_distance(self.neurons[bmu], vector)
+        self.dist_memory[bmu] = best
+        while cont:
+            new_bmu, new_best = self.search_smallest_neighbor(vector, bmu, best)
+            if new_bmu == bmu:
+                cont = False
+                neighbors = []
+                if bmu[0] < self.neurons_nbr[0] - 1:
+                    neighbors.append((bmu[0] + 1, bmu[1]))
+                if bmu[0] > 0:
+                    neighbors.append((bmu[0] - 1, bmu[1]))
+                if bmu[1] < self.neurons_nbr[1] - 1:
+                    neighbors.append((bmu[0], bmu[1] + 1))
+                if bmu[1] > 0:
+                    neighbors.append((bmu[0], bmu[1] - 1))
+                for i in neighbors:
+                    neighbors_bmu, neighbors_best = self.search_smallest_neighbor(vector, i, np.inf)
+                    if neighbors_bmu != bmu:
+                        best = neighbors_best
+                        bmu = neighbors_bmu
+                        cont = True
+                        break
+            else:
+                best = new_best
+                bmu = new_bmu
+        return bmu
+
+    def search_smallest_neighbor(self, vector, bmu, best):
+        neighbors = []
+        if bmu[0] < self.neurons_nbr[0] - 1:
+            neighbors.append((bmu[0] + 1, bmu[1]))
+        if bmu[0] > 0:
+            neighbors.append((bmu[0] - 1, bmu[1]))
+        if bmu[1] < self.neurons_nbr[1] - 1:
+            neighbors.append((bmu[0], bmu[1] + 1))
+        if bmu[1] > 0:
+            neighbors.append((bmu[0], bmu[1] - 1))
+        for i in neighbors:
+            value = quadratic_distance(self.neurons[i[0], i[1]], vector)
+            self.dist_memory[i] = value
+            if value < best:
+                best = value
+                bmu = i
+        return bmu, best
+
     def get_all_winners(self):
         winners_list = np.zeros(self.data.shape[0], dtype=tuple)  # list of BMU for each corresponding training vector
         for i in np.ndindex(winners_list.shape):
             winners_list[i] = self.winner(self.data[i])
         return winners_list
+
+    def get_all_fast_winners(self):
+        winners_list = np.zeros(self.data.shape[0], dtype=tuple)  # list of BMU for each corresponding training vector
+        error = 0
+        for i in np.ndindex(winners_list.shape):
+            win = self.winner(self.data[i])
+            fast = self.fast_winner(self.data[i])
+            if fast != win:
+                error += 1
+            winners_list[i] = fast
+        # print("Error number :", error)
+        return winners_list, error
 
     def run_iteration(self):
         if self.iteration >= self.max_iterations:
@@ -86,6 +167,13 @@ class StandardSOM:
             error[i] = np.mean((self.data[i] - self.neurons[winners[i]])**2)
         return np.mean(error)
 
+    def mean_square_quantization_error_secondary(self):
+        winners, nb_error = self.get_all_fast_winners()
+        error = np.zeros(winners.shape)
+        for i in np.ndindex(winners.shape):
+            error[i] = np.mean((self.data[i] - self.neurons[winners[i]])**2)
+        return np.mean(error), nb_error
+
     def mean_square_distance_to_neighbour(self):
         error = np.zeros(self.neurons.shape)
         for i in np.ndindex(self.neurons_nbr):
@@ -114,3 +202,4 @@ if __name__ == '__main__':
     print("Executed in " + str(end - start) + " seconds.")
     print(som.mean_square_quantization_error())
     print(som.mean_square_distance_to_neighbour())
+    print(som.mean_square_quantization_error_secondary())

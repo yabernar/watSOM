@@ -15,7 +15,7 @@ class GenerateFromShape:
         # print(size)
         pixels = np.array(self.image.getdata(), 'uint8')
         pixels = pixels.reshape(size)
-        print(pixels)
+        # print(pixels)
 
         for i in range(self.nb_elements):
             elem = np.random.random(2)

@@ -10,7 +10,7 @@ from PIL import Image
 
 
 class SpokenDigitsDataset:
-    def __init__(self, dataset_path, length=100):
+    def __init__(self, dataset_path, length=200):
         self.length = length
         self.data = []
         self.recording_folder = dataset_path

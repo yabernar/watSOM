@@ -3,6 +3,7 @@ import os
 import time
 
 import pandas as pd
+import numpy as np
 import multiprocessing as mp
 
 from PIL import Image
@@ -26,15 +27,15 @@ from Data.Mosaic_Image import MosaicImage
 from Data.Pixels_from_Image import PixelsFromImage
 from Data.Spoken_digits_dataset import SpokenDigitsDataset
 
-som_algs = {"standard": StandardSOM, "fourCorners": FourCornersSOM, "hexFourCorners": FourCornersSOM_Hex, "hexSOM": HexSOM}
+som_algs = {"Fast-SOM": FourCornersSOM, "Fast-Hex": FourCornersSOM_Hex}
 data_types = {"spokenDigits": SpokenDigitsDataset("/users/yabernar/workspace/watSOM/Data/FSDD/recordings", 1000).get_data(),
               "images": MosaicImage(Image.open("/users/yabernar/workspace/watSOM/Code/fast_som/Elijah.png"), Parameters({"pictures_dim": [10, 10]})).get_data(),
               "uniform3D": uniform(1000, 3),
               "pixel_colors": PixelsFromImage(Image.open("/users/yabernar/workspace/watSOM/Code/fast_som/Elijah.png"), 1000).get_data(),
               "catShape": GenerateFromShape(Image.open("/users/yabernar/workspace/watSOM/Code/fast_som/cat-silhouette.png"), 1000).get_data(),
               "uniform2D": uniform(1000, 2)}
-neuron_number = {"small": (16, 16), "medium": (32, 32), "rectangular": (48, 24)}
-n_nbr = (32, 32)
+neuron_numbers = {"12": (12, 12), "medium": (32, 32), "rectangular": (48, 24)}
+n_nbr = (12, 12)
 nb_epochs = 10
 
 
@@ -49,27 +50,26 @@ def regenerate_database():
                   "uniform2D": uniform(1000, 2)}
 
 
-def evaluate_on_all(params):
+def evaluate_on_all(params, neurons):
     d_type, algo = params
-    res = {"algorithm": algo, "data_type": d_type}
-    res.update(evaluate_learning(som_algs[algo], data_types[d_type]))
+    res = {"algorithm": algo, "data_type": d_type, "neurons": neurons}
+    res.update(evaluate_learning(som_algs[algo], data_types[d_type], neurons))
     # print(algo, d_type, "finished learning.")
     # res.update(evaluate_reconstruction(som_algs[algo], data_types[d_type]))
     # print(algo, d_type, "finished.")
     return res
 
 
-def evaluate_learning(SOM, data_type):
+def evaluate_learning(SOM, data_type, neurons_nbr):
     inputs = Parameters({"alpha": Variable(start=0.6, end=0.05, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.5, end=0.001, nb_steps=nb_epochs),
                          "data": data_type,
-                         "neurons_nbr": n_nbr,
+                         "neurons_nbr": (neurons_nbr, neurons_nbr),
                          "epochs_nbr": nb_epochs})
     som = SOM(inputs)
     som.run()
-    msqe_r, nb_errors = som.mean_square_quantization_error_secondary()
-    return {"MSQE_L": som.mean_square_quantization_error(), "MSDtN": som.mean_square_distance_to_neighbour(), "MSQE_R": msqe_r,
-            "Error Nbr": nb_errors, "Error %:": nb_errors/data_type.shape[0] * 100}
+    nb_comp = np.mean(som.nbr_quad_dist)
+    return {"nbr_comparisons": nb_comp, "percentage_calculated": nb_comp/(neurons_nbr**2)*100}
 
 
 def evaluate_reconstruction(SOM, data_type):
@@ -90,25 +90,26 @@ if __name__ == '__main__':
     start = time.time()
     full_results = None
 
-    for i in range(50):
-        pool = mp.Pool(8)
-        results = pool.starmap(evaluate_on_all, zip(list(itertools.product(data_types, som_algs))))
-        pool.close()
-        pool.join()
-        if full_results is None:
-            full_results = pd.DataFrame(results)
-        else:
-            tmp = pd.DataFrame(results)
-            full_results = pd.concat([full_results, tmp], ignore_index=True)
-        regenerate_database()
-
-        print("Test number", i+1, "finished.")
+    for n in range(52, 101, 2):
+        for i in range(1):
+            pool = mp.Pool(8)
+            results = pool.starmap(evaluate_on_all, zip(list(itertools.product(data_types, som_algs)), itertools.repeat(n)))
+            pool.close()
+            pool.join()
+            if full_results is None:
+                full_results = pd.DataFrame(results)
+            else:
+                tmp = pd.DataFrame(results)
+                full_results = pd.concat([full_results, tmp], ignore_index=True)
+            regenerate_database()
+            # print("Test number", i+1, "finished.")
+        print(n, "Neurons finished.")
 
     end = time.time()
     print("Executed in " + str(end - start) + " seconds.")
 
     print(full_results)
-    full_results.to_csv(os.path.join("/users/yabernar/Documents/Quick SOM Biblio/Results/", "check.csv"))
+    full_results.to_csv(os.path.join("/users/yabernar/Documents/Quick SOM Biblio/Results/", "fast-eval2.csv"))
 
 # 10x10 SOM, 10 epochs, 10x10 img
 #        MSDtN    MSQE_L       algorithm     data_type

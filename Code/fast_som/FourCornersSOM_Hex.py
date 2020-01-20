@@ -7,10 +7,9 @@ from Code.Common_Functions import *
 from Code.fast_som.StandardSOM import StandardSOM
 from Data.Generated_Data import *
 from Data.Mosaic_Image import MosaicImage
-from Data.Spoken_digits_dataset import SpokenDigitsDataset
 
 
-class FourCornersSOM:
+class FourCornersSOM_Hex:
     def __init__(self, parameters):
         # Parameters
         self.alpha = parameters["alpha"]
@@ -30,7 +29,7 @@ class FourCornersSOM:
         self.vector_list = None
         self.distance_to_input = None
 
-        self.distance_vector = np.empty(manhattan_distance((0, 0), self.neurons_nbr))
+        self.distance_vector = np.empty(hexagonal_distance((0, 0), self.neurons_nbr))
         self.iteration = 0
         self.max_iterations = self.epochs_nbr * self.data.shape[0]
 
@@ -52,10 +51,6 @@ class FourCornersSOM:
         # print("---")
         # if bmu != self.real_bmu(vector):
         #     self.show_distance_to_input(vector)
-        # bmu = self.real_bmu(vector)
-        # if 4 <= bmu[0] < 9 and 4 <= bmu[1] < 9:
-        #     print("BMU :", bmu)
-        #     self.show_distance_to_input(vector)
         self.nbr_quad_dist.append(np.count_nonzero(self.dist_memory))
         return bmu
 
@@ -76,15 +71,7 @@ class FourCornersSOM:
             new_bmu, new_best = self.search_smallest_neighbor(vector, bmu, best)
             if new_bmu == bmu:
                 cont = False
-                neighbors = []
-                if bmu[0] < self.neurons_nbr[0] - 1:
-                    neighbors.append((bmu[0] + 1, bmu[1]))
-                if bmu[0] > 0:
-                    neighbors.append((bmu[0] - 1, bmu[1]))
-                if bmu[1] < self.neurons_nbr[1] - 1:
-                    neighbors.append((bmu[0], bmu[1] + 1))
-                if bmu[1] > 0:
-                    neighbors.append((bmu[0], bmu[1] - 1))
+                neighbors = self.return_all_neighbors(bmu)
                 for i in neighbors:
                     neighbors_bmu, neighbors_best = self.search_smallest_neighbor(vector, i, np.inf)
                     if neighbors_bmu != bmu:
@@ -97,7 +84,7 @@ class FourCornersSOM:
                 bmu = new_bmu
         return bmu
 
-    def search_smallest_neighbor(self, vector, bmu, best):
+    def return_all_neighbors(self, bmu):
         neighbors = []
         if bmu[0] < self.neurons_nbr[0] - 1:
             neighbors.append((bmu[0] + 1, bmu[1]))
@@ -107,6 +94,20 @@ class FourCornersSOM:
             neighbors.append((bmu[0], bmu[1] + 1))
         if bmu[1] > 0:
             neighbors.append((bmu[0], bmu[1] - 1))
+        if bmu[1] % 2 == 0 and bmu[0] > 0:
+            if bmu[1] > 0:
+                neighbors.append((bmu[0] - 1, bmu[1] - 1))
+            if bmu[1] < self.neurons_nbr[1] - 1:
+                neighbors.append((bmu[0] - 1, bmu[1] + 1))
+        if bmu[1] % 2 == 1 and bmu[0] < self.neurons_nbr[0]-1:
+            if bmu[1] > 0:
+                neighbors.append((bmu[0] + 1, bmu[1] - 1))
+            if bmu[1] < self.neurons_nbr[1] - 1:
+                neighbors.append((bmu[0] + 1, bmu[1] + 1))
+        return neighbors
+
+    def search_smallest_neighbor(self, vector, bmu, best):
+        neighbors = self.return_all_neighbors(bmu)
         for i in neighbors:
             value = quadratic_distance(self.neurons[i[0], i[1]], vector)
             self.dist_memory[i] = value
@@ -116,9 +117,8 @@ class FourCornersSOM:
         return bmu, best
 
     def gradient(self, dist, i):
-        neighbors = []
         best = dist[i]
-        res = "*"  # "🡱🡲🡰🡳"
+        res = "*"  # "🡸 🡺 🡹 🡻 🡼 🡽 🡾 🡿"
         if i[0] < self.neurons_nbr[0] - 1 and dist[i[0]+1, i[1]] < best:
             res = "🡳"
             best = dist[i[0]+1, i[1]]
@@ -126,20 +126,49 @@ class FourCornersSOM:
             res = "🡱"
             best = dist[i[0]-1, i[1]]
         if i[1] < self.neurons_nbr[1] - 1 and dist[i[0], i[1] + 1] < best:
-            res = "🡲"
+            res = "🡽"
+            if i[1] % 2 == 0:
+                res = "🡾"
             best = dist[i[0], i[1] + 1]
         if i[1] > 0 and dist[i[0], i[1] - 1] < best:
-            res = "🡰"
+            res = "🡼"
+            if i[1] % 2 == 0:
+                res = "🡿"
+            best = dist[i[0], i[1] - 1]
+
+        if i[1] % 2 == 0 and i[0] >= 1:
+            if i[1] >= 1 and dist[i[0] - 1, i[1] - 1] < best:
+                res = "🡼"
+                best = dist[i[0] - 1, i[1] - 1]
+            if i[1] < self.neurons_nbr[1] - 1 and dist[i[0] - 1, i[1] + 1] < best:
+                res = "🡽"
+                best = dist[i[0] - 1, i[1] - 1]
+        if i[1] % 2 == 1 and i[0] < self.neurons_nbr[0]-1:
+            if i[1] >= 1 and dist[i[0] + 1, i[1] - 1] < best:
+                res = "🡿"
+                best = dist[i[0] - 1, i[1] - 1]
+            if i[1] < self.neurons_nbr[1] - 1 and dist[i[0] + 1, i[1] + 1] < best:
+                res = "🡾"
+                best = dist[i[0] - 1, i[1] - 1]
         return res
 
     def show_distance_to_input(self, vector):
         symbols_array = np.array(self.distance_to_input, dtype=str)
         for i in np.ndindex(self.distance_to_input.shape):
             symbols_array[i] = self.gradient(self.distance_to_input, i)
-        with np.printoptions(threshold=np.nan, suppress=True, linewidth=720):
+        with np.printoptions(suppress=True, linewidth=720):
             print(self.distance_to_input)
-            print(symbols_array)
+            FourCornersSOM_Hex.hex_printing(symbols_array)
         print("----")
+
+    @staticmethod
+    def hex_printing(array):
+        for i in range(array.shape[0]):
+            if i % 2 == 1:
+                print("", end="")
+            for j in range(array.shape[1]):
+                print(array[i, j], end=" ")
+            print("")
 
     def get_all_winners(self):
         winners_list = np.zeros(self.data.shape[0], dtype=tuple)  # list of BMU for each corresponding training vector
@@ -164,6 +193,7 @@ class FourCornersSOM:
             winners_list[i] = real
         # print("Error number :", error)
         return winners_list, error
+
 
     def run_iteration(self):
         if self.iteration >= self.max_iterations:
@@ -195,8 +225,7 @@ class FourCornersSOM:
 
     def updating_weights(self, bmu, vector):
         for i in np.ndindex(self.neurons_nbr):
-            dist = manhattan_distance(np.asarray(i), np.asarray(bmu))
-            # dist = hexagonal_distance(np.asarray(i), np.asarray(bmu))
+            dist = hexagonal_distance(np.asarray(i), np.asarray(bmu))
             self.neurons[i] += self.alpha.get() * self.distance_vector[dist] * (vector - self.neurons[i])
 
     def get_reconstructed_data(self, winners=None):
@@ -242,7 +271,7 @@ class FourCornersSOM:
         for i in np.ndindex(self.neurons_nbr):
             nb_neighbours = 0
             for j in np.ndindex(self.neurons_nbr):
-                if manhattan_distance(np.asarray(i), np.asarray(j)) <= 1:
+                if hexagonal_distance(np.asarray(i), np.asarray(j)) <= 1:
                     error[i] += np.mean((self.neurons[i] - self.neurons[j])**2)
                     nb_neighbours += 1
             error[i] /= nb_neighbours
@@ -255,22 +284,27 @@ if __name__ == '__main__':
     nb_epochs = 10
     inputs = Parameters({"alpha": Variable(start=0.6, end=0.05, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.5, end=0.2, nb_steps=nb_epochs),
-                         "data": MosaicImage(Image.open("/users/yabernar/workspace/watSOM/Code/fast_som/Elijah.png"), Parameters({"pictures_dim": [10, 10]})).get_data(),
+                         "data": MosaicImage(Image.open("/users/yabernar/workspace/watSOM/Code/fast_som/Elijah.png"),
+                                             Parameters({"pictures_dim": [10, 10]})).get_data(),
                          "neurons_nbr": (12, 12),
                          "epochs_nbr": nb_epochs})
     # som = StandardSOM(inputs)
     # som.run()
+    #
+    # a = np.zeros((5, 8), dtype=int)
+    # for i in range(5):
+    #     for j in range(8):
+    #         a[i, j] = hexagonal_distance((0, 0), (j, i))
+    # FourCornersSOM_Hex.hex_printing(a)
 
-    som2 = FourCornersSOM(inputs)
+    som2 = FourCornersSOM_Hex(inputs)
     som2.run()
     # som2.neurons = som.neurons
 
     end = time.time()
     print("Executed in " + str(end - start) + " seconds.")
     print(som2.mean_square_quantization_error())
-    print(som2.mean_square_quantization_error_secondary())
     print(som2.mean_square_distance_to_neighbour())
-    # print(som2.nbr_quad_dist)
     # print(som.mean_square_quantization_error())
     # print(som.mean_square_distance_to_neighbour())
 
