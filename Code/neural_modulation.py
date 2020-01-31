@@ -3,6 +3,7 @@ from PIL import Image, ImageChops
 import matplotlib.pyplot as plt
 import numpy as np
 
+from Code.FastSOM import FastSOM
 from Code.Parameters import Parameters, Variable
 from Code.SOM import SOM, manhattan_distance
 from Data.Mosaic_Image import MosaicImage
@@ -31,9 +32,9 @@ nb_epochs = 50
 inputs_SOM = Parameters({"alpha": Variable(start=0.5, end=0.25, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.1, end=0.03, nb_steps=nb_epochs),
                          "data": data.get_data(),
-                         "neurons_nbr": (10, 10),
+                         "neurons_nbr": (20, 20),
                          "epochs_nbr": nb_epochs})
-som = SOM(inputs_SOM)
+som = FastSOM(inputs_SOM)
 for i in range(nb_epochs):
     print('Epoch ', i)
     som.run_epoch()

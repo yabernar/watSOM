@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import signal
+from scipy import signal, special
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -21,27 +21,35 @@ def gaussian_distribution(position, size, sigma):
     return result
 
 
+def gaussian_distribution_uniform(position, size, sigma):
+    result = gaussian_distribution(position, size, sigma)
+    result = np.divide(result, np.sum(result))
+    return result
+
+
 class DNF:
     def __init__(self, width, height):
         self.width = width
         self.height = height
         print("Dnf size : ", width, ";", height)
-        self.dt = 0.2
+        self.dt = 1
         self.tau = 1
-        self.cexc = 2
-        self.sexc = 0.033
-        self.cinh = 6
-        self.sinh = 0.001
-        self.h = -0.7
-        self.gi = 100
+        self.cexc = 15
+        self.sexc = 0.05
+        self.cinh = 1
+        self.sinh = 0.1
+        self.gain = 5
+        self.h = -4
+        self.gi = 0.01
 
         self.input = np.zeros([width, height], dtype=float)
         self.potentials = np.zeros([width, height], dtype=float)
+        self.activations = np.zeros([width, height], dtype=float)
         self.lateral = np.zeros([width, height], dtype=float)
         self.kernel = np.zeros([width * 2, height * 2], dtype=float)
 
-        self.kernel = (self.cexc * gaussian_distribution((0.5, 0.5), (self.width, self.height), self.sexc)) - (self.gi / (self.width * self.height)) \
-                      - (self.cinh * gaussian_distribution((0.5, 0.5), (self.width, self.height), self.sinh))
+        self.kernel = (self.cexc * gaussian_distribution_uniform((0.5, 0.5), (self.width*2, self.height*2), self.sexc)) - self.gi
+        # (self.cinh * gaussian_distribution_uniform((0.5, 0.5), (self.width*2, self.height*2), self.sinh)) - \
 
         # for i in range(width*2):
         #     for j in range(height*2):
@@ -65,14 +73,15 @@ class DNF:
         # for i in range(self.width):
         #     for j in range(self.height):
         #         lateral += self.potentials[i, j]*self.optimized_DoG((i, j), x)
-        self.potentials[x] += self.dt * (-self.potentials[x] + self.h + self.lateral[x] + self.input[x]) / self.tau
-        if self.potentials[x] > 1:
-            self.potentials[x] = 1
-        elif self.potentials[x] < 0:
-            self.potentials[x] = 0
+        self.potentials[x] += self.dt * (-self.potentials[x] + self.h + self.lateral[x] + self.input[x]*self.gain) / self.tau
+        # if self.potentials[x] > 1:
+        #     self.potentials[x] = 1
+        # elif self.potentials[x] < -1:
+        #     self.potentials[x] = -1
 
     def update_map(self):
-        self.lateral = signal.fftconvolve(self.potentials, self.kernel, mode='same')
+        self.activations = special.expit(self.potentials)
+        self.lateral = signal.fftconvolve(self.activations, self.kernel, mode='same')
         # self.lateral = np.divide(self.lateral, self.width*self.height)*40*40
 
         # print(self.lateral)
