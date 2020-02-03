@@ -32,15 +32,15 @@ class DNF:
         self.width = width
         self.height = height
         print("Dnf size : ", width, ";", height)
-        self.dt = 1
-        self.tau = 1
+        self.dt = 0.1
+        self.tau = 0.5
         self.cexc = 15
         self.sexc = 0.05
-        self.cinh = 1
-        self.sinh = 0.1
+        # self.cinh = 1
+        # self.sinh = 0.1
         self.gain = 5
         self.h = -4
-        self.gi = 0.01
+        self.gi = 250
 
         self.input = np.zeros([width, height], dtype=float)
         self.potentials = np.zeros([width, height], dtype=float)
@@ -48,7 +48,8 @@ class DNF:
         self.lateral = np.zeros([width, height], dtype=float)
         self.kernel = np.zeros([width * 2, height * 2], dtype=float)
 
-        self.kernel = (self.cexc * gaussian_distribution_uniform((0.5, 0.5), (self.width*2, self.height*2), self.sexc)) - self.gi
+        self.kernel = (self.cexc * gaussian_distribution_uniform((0.5, 0.5), (self.width*2, self.height*2), self.sexc)) - (self.gi / (self.width*2 *
+                                                                                                                                      self.height*2))
         # (self.cinh * gaussian_distribution_uniform((0.5, 0.5), (self.width*2, self.height*2), self.sinh)) - \
 
         # for i in range(width*2):
@@ -99,7 +100,7 @@ def updatefig(*args):
 
 if __name__ == '__main__':
     fig = plt.figure()
-    dnf = DNF(80, 80)
+    dnf = DNF(160, 160)
     dnf.gaussian_activity((0.1, 0.5), (0.9, 0.5), 0.1)
     # plt.imshow(dnf.kernel)
     im = plt.imshow(dnf.input, cmap='hot', interpolation='nearest', animated=True)
