@@ -12,11 +12,11 @@ path = "/users/yabernar/GrosDisque/CDNET14"
 path2 = "/users/yabernar/workspace/aweSOM/Data/images/tracking/ducks/"
 
 categories = sorted(os.listdir(path + "/dataset"), key=str.lower)
-elements = sorted(os.listdir(path + "/dataset/" + categories[1]), key=str.lower)
+elements = sorted(os.listdir(path + "/dataset/" + categories[3]), key=str.lower)
 print(categories)
 print(elements)
 
-chosen_path = path + "/dataset/" + categories[1] + "/" + elements[0]
+chosen_path = path + "/dataset/" + categories[3] + "/" + elements[2]
 temporal_ROI = (400, 1700)
 plot = None
 bkg = Image.open(chosen_path + "/input/" + 'in{0:06d}.jpg'.format(472))

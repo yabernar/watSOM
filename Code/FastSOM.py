@@ -32,6 +32,10 @@ class FastSOM:
         self.iteration = 0
         self.max_iterations = self.epochs_nbr * self.data.shape[0]
 
+    def set_data(self, data):
+        self.data = data
+
+
     def winner(self, vector):
         self.dist_memory = np.zeros(self.neurons_nbr, dtype=float)
         starting_positions = [(0, 0), (self.neurons_nbr[0]-1, 0), (0, self.neurons_nbr[1]-1), (self.neurons_nbr[0]-1, self.neurons_nbr[1]-1)]
