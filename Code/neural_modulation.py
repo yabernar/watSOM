@@ -29,11 +29,13 @@ pictures_dim = [16, 16]
 parameters = Parameters({"pictures_dim": pictures_dim})
 data = MosaicImage(bkg, parameters)
 nb_epochs = 50
+data.sliding_window()
 inputs_SOM = Parameters({"alpha": Variable(start=0.5, end=0.25, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.1, end=0.03, nb_steps=nb_epochs),
                          "data": data.get_data(),
                          "neurons_nbr": (20, 20),
                          "epochs_nbr": nb_epochs})
+data.fixed_window()
 som = FastSOM(inputs_SOM)
 for i in range(nb_epochs):
     print('Epoch ', i)

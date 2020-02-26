@@ -53,6 +53,7 @@ def process_video(video, params):
 
 
 if __name__ == '__main__':
+    #optuna pour optimiser
     tpe_trials = Trials()
 
     space_dnf = (hp.uniform('tau_dt', 0.0001, 1), hp.uniform('h', -1, 0), hp.uniform('gi', 0, 10), hp.uniform('excitation_amplitude', 0.0001, 5), hp.uniform('excitation_sigma', 0.0001, 1))
