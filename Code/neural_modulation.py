@@ -7,6 +7,7 @@ from Code.FastSOM import FastSOM
 from Code.Parameters import Parameters, Variable
 from Code.SOM import SOM, manhattan_distance
 from Data.Mosaic_Image import MosaicImage
+from Data.Sliding_window import SlidingWindow
 
 path = "/users/yabernar/GrosDisque/CDNET14"
 path2 = "/users/yabernar/workspace/aweSOM/Data/images/tracking/ducks/"
@@ -19,30 +20,30 @@ print(elements)
 chosen_path = path + "/dataset/" + categories[3] + "/" + elements[2]
 temporal_ROI = (400, 1700)
 plot = None
-bkg = Image.open(chosen_path + "/input/" + 'in{0:06d}.jpg'.format(472))
+# bkg = Image.open(chosen_path + "/input/" + 'in{0:06d}.jpg'.format(472))
 # bkg = Image.open(path + 'ducks{0:05d}.png'.format(1))
+bkg = Image.open("/users/yabernar/workspace/watSOM/Data/color_test.png")
 
 ############
 # LEARNING #
 ############
-pictures_dim = [16, 16]
+pictures_dim = [10, 10]
 parameters = Parameters({"pictures_dim": pictures_dim})
-data = MosaicImage(bkg, parameters)
+data = SlidingWindow(bkg, parameters)
+mosaic = MosaicImage(bkg, parameters)
 nb_epochs = 50
-data.sliding_window()
 inputs_SOM = Parameters({"alpha": Variable(start=0.5, end=0.25, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.1, end=0.03, nb_steps=nb_epochs),
                          "data": data.get_data(),
-                         "neurons_nbr": (20, 20),
+                         "neurons_nbr": (10, 10),
                          "epochs_nbr": nb_epochs})
-data.fixed_window()
-som = FastSOM(inputs_SOM)
+som = SOM(inputs_SOM)
 for i in range(nb_epochs):
     print('Epoch ', i)
     som.run_epoch()
     original = data.image
     reconstructed = data.reconstruct(som.get_reconstructed_data())
-    som_image = data.reconstruct(som.get_neural_list(), size=som.neurons_nbr)
+    som_image = mosaic.reconstruct(som.get_neural_list(), size=som.neurons_nbr)
     difference = ImageChops.difference(original, Image.fromarray(reconstructed)).convert('L')
     difference = np.asarray(difference)
     # difference = np.sum(difference, axis=2)

@@ -144,6 +144,7 @@ class FastSOM:
     def get_reconstructed_data(self, winners=None):
         if winners is None:
             winners = self.get_all_winners()
+        print(winners)
         r_data = []
         for index in winners:
             r_data.append(self.neurons[index])
