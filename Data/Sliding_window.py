@@ -46,6 +46,7 @@ class SlidingWindow:
                 count += 1
                 # print(current)
                 current = current.reshape(dim)
+                current = np.rot90(current, 2, (0, 1))
                 # current = np.flip(current, (0,1))
                 # print(pixels.shape)
                 # print(current.shape)
