@@ -13,16 +13,16 @@ path = "/users/yabernar/GrosDisque/CDNET14"
 path2 = "/users/yabernar/workspace/aweSOM/Data/images/tracking/ducks/"
 
 categories = sorted(os.listdir(path + "/dataset"), key=str.lower)
-elements = sorted(os.listdir(path + "/dataset/" + categories[3]), key=str.lower)
+elements = sorted(os.listdir(path + "/dataset/" + categories[1]), key=str.lower)
 print(categories)
 print(elements)
 
-chosen_path = path + "/dataset/" + categories[3] + "/" + elements[2]
+chosen_path = path + "/dataset/" + categories[1] + "/" + elements[0]
 temporal_ROI = (400, 1700)
 plot = None
-# bkg = Image.open(chosen_path + "/input/" + 'in{0:06d}.jpg'.format(472))
+bkg = Image.open(chosen_path + "/input/" + 'in{0:06d}.jpg'.format(472))
 # bkg = Image.open(path + 'ducks{0:05d}.png'.format(1))
-bkg = Image.open("/users/yabernar/workspace/watSOM/Data/color_test.png")
+# bkg = Image.open("/users/yabernar/workspace/watSOM/Data/color_test.png")
 
 ############
 # LEARNING #
@@ -31,7 +31,7 @@ pictures_dim = [10, 10]
 parameters = Parameters({"pictures_dim": pictures_dim})
 data = SlidingWindow(bkg, parameters)
 mosaic = MosaicImage(bkg, parameters)
-nb_epochs = 50
+nb_epochs = 5
 inputs_SOM = Parameters({"alpha": Variable(start=0.5, end=0.25, nb_steps=nb_epochs),
                          "sigma": Variable(start=0.1, end=0.03, nb_steps=nb_epochs),
                          "data": data.get_data(),
@@ -83,7 +83,7 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
 
     bgs_difference = ImageChops.difference(bkg, current).convert('L')
 
-    new_data = MosaicImage(current, parameters)
+    new_data = SlidingWindow(current, parameters)
     som.set_data(new_data.get_data())
     winners = som.get_all_winners()
     diff_winners = np.zeros(winners.shape)
@@ -101,7 +101,7 @@ for i in range(temporal_ROI[0], temporal_ROI[1]):
     som_difference = ImageChops.difference(Image.fromarray(reconstructed), current).convert('L')
     som_difference = ImageChops.multiply(som_difference, diff_winners)
 
-    som_difference.save("/users/yabernar/workspace/watSOM/Results/DNF/saliency"+str(i)+".png")
+#    som_difference.save("/users/yabernar/workspace/watSOM/Results/DNF/saliency"+str(i)+".png")
 #    diff_winners.save("/users/yabernar/workspace/watSOM/Results/diff_winners"+str(i)+".png")
 
     if plot is None:

@@ -42,18 +42,19 @@ class SlidingWindow:
         count = 0
         for i in range(0, size[0] - dim[0], 5):
             for j in range(0, size[1] - dim[1], 5):
+                # print(i,j)
                 current = data[count]
                 count += 1
                 # print(current)
                 current = current.reshape(dim)
-                current = np.rot90(current, 2, (0, 1))
+                # current = np.rot90(current, 2, (0, 1))
                 # current = np.flip(current, (0,1))
                 # print(pixels.shape)
                 # print(current.shape)
                 # print(self.pictures_dim)
                 # print(self.size)
                 pixels[i:i+dim[1], j:j+dim[1], :] += current
-        pixels *= (255/2)
+        pixels *= (255/4)
         pixels = np.array(pixels, 'uint8')
         return pixels
 
