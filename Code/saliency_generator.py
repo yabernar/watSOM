@@ -77,7 +77,6 @@ class SaliencyGenerator:
         os.makedirs(os.path.join(supplements_path, "saliency"), exist_ok=True)
         os.makedirs(os.path.join(supplements_path, "thresholded"), exist_ok=True)
 
-
         indexes = range(temporal_ROI[0], temporal_ROI[1]+1)
         nb_runs = len(indexes)
         pool = mp.Pool(8)

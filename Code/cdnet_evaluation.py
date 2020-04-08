@@ -85,4 +85,4 @@ if __name__ == '__main__':
     cdnet_path = "/users/yabernar/GrosDisque/CDNET14/dataset"
     output_path = "/users/yabernar/GrosDisque/CDNET14/optimisation"
     cmp = Comparator()
-    print(cmp.evaluate_all(cdnet_path, output_path))
+    print(cmp.evaluate_all(cdnet_path, output_path, [1]))

@@ -19,7 +19,7 @@ class SOM:
         self.vector_list = None
         self.distance_to_input = None
         # self.distance_vector = np.empty(np.sum(self.neurons_nbr))
-        self.distance_vector = np.empty(manhattan_distance((0,0), self.neurons_nbr))
+        self.distance_vector = np.empty(manhattan_distance((0, 0), self.neurons_nbr))
         self.iteration = 0
         self.max_iterations = self.epochs_nbr * self.data.shape[0]
 
