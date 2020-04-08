@@ -100,8 +100,8 @@ def updatefig(*args):
 
 if __name__ == '__main__':
     fig = plt.figure()
-    dnf = DNF(160, 160)
-    dnf.gaussian_activity((0.1, 0.5), (0.9, 0.5), 0.1)
+    dnf = DNF(45, 45)
+    dnf.gaussian_activity((0.2, 0.2), (0.65, 0.65), 0.1)
     # plt.imshow(dnf.kernel)
     im = plt.imshow(dnf.input, cmap='hot', interpolation='nearest', animated=True)
     ani = animation.FuncAnimation(fig, updatefig, interval=100, blit=True)
