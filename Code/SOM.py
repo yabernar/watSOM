@@ -15,7 +15,7 @@ class SOM:
         self.epochs_nbr = parameters["epochs_nbr"]
 
         # Computing variables
-        self.neurons = np.zeros(self.neurons_nbr + self.data.shape[1:], dtype=float)
+        self.neurons = np.random.random(self.neurons_nbr + self.data.shape[1:])
         self.vector_list = None
         self.distance_to_input = None
         # self.distance_vector = np.empty(np.sum(self.neurons_nbr))
