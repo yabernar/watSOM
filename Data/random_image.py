@@ -5,7 +5,7 @@ from PIL import Image
 from Code.Parameters import Parameters
 
 
-class SlidingWindow:
+class RandomImage:
     def __init__(self, image, parameters):
         self.data = None
         self.image = image
@@ -26,9 +26,9 @@ class SlidingWindow:
             self.pictures_dim[1] *= 3
             self.color = True
         pixels = pixels.reshape(self.size)
-        for i in range(0, self.size[0] - self.pictures_dim[0], 5):
-            for j in range(0, self.size[1] - self.pictures_dim[1], 15):
-                self.data.append(np.array(pixels[i:i+self.pictures_dim[0], j:j+self.pictures_dim[1]]))
+        for i in range(0, self.size[0] - self.pictures_dim[0], 1):
+            for j in range(0, self.size[1] - self.pictures_dim[1], 3):
+                self.data.append(np.array(pixels[i:i+self.pictures_dim[0], j:j+self.pictures_dim[1]]).flatten())
         self.data = np.array(self.data) / 255
 
     def reconstruct(self, data, size=None):
@@ -58,8 +58,9 @@ class SlidingWindow:
         pixels = np.array(pixels, 'uint8')
         return pixels
 
-    def get_data(self):
-        return self.data
+    def get_data(self, size):
+        np.random.shuffle(self.data)
+        return self.data[0:size]
 
     def display(self):
         return plt.imshow(self.image)
@@ -69,4 +70,4 @@ if __name__ == '__main__':
     bkg = Image.open("Data/color_test.png")
     pictures_dim = [10, 10]
     parameters = Parameters({"pictures_dim": pictures_dim})
-    data = SlidingWindow(bkg, parameters)
+    data = RandomImage(bkg, parameters)

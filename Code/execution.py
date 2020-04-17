@@ -9,6 +9,7 @@ from Code.FastSOM import FastSOM
 from Code.Parameters import Parameters, Variable
 from Code.SOM import SOM
 from Data.Mosaic_Image import MosaicImage
+from Data.random_image import RandomImage
 
 
 class Execution:
@@ -20,6 +21,7 @@ class Execution:
         self.metrics = {}
 
         self.data = None
+        self.training_data = None
         self.som = None
 
     def open(self, path):
@@ -29,6 +31,15 @@ class Execution:
         self.dataset = data["dataset"]
         self.model = data["model"]
         self.codebooks = data["codebooks"]
+        self.metrics = data["metrics"]
+
+    def light_open(self, path):
+        txt = codecs.open(path, 'r', encoding='utf-8').read()
+        data = json.loads(txt)
+        self.metadata = data["metadata"]
+        self.dataset = data["dataset"]
+        self.model = data["model"]
+        # self.codebooks["Epoch 30"] = data["codebooks"]["Epoch 30"]
         self.metrics = data["metrics"]
 
     def save(self, path):
@@ -41,6 +52,12 @@ class Execution:
             img = Image.open(path)
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
             self.data = MosaicImage(img, parameters)
+        elif self.dataset["type"] == "random_image":
+            path = os.path.join("Data", "images", self.dataset["file"])
+            img = Image.open(path)
+            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
+            self.data = MosaicImage(img, parameters)
+            self.training_data = RandomImage(img, parameters)
         else:
             print("Error : No dataset type specified !")
 
@@ -66,8 +83,12 @@ class Execution:
         for i in range(nb_epochs):
             # print("Epoch "+str(i+1))
             if "Epoch "+str(i + 1) not in self.codebooks:
+                if self.training_data is not None:
+                    self.som.data = self.training_data.get_data(self.som.data.shape[0])
                 self.som.run_epoch()
                 self.codebooks["Epoch " + str(i + 1)] = copy.deepcopy(self.som.neurons.tolist())
+        self.som.data = self.data.get_data()
+
 
     def compute_metrics(self):
         self.metrics["Square_error"] = self.som.square_error()
@@ -80,11 +101,11 @@ class Execution:
 
 if __name__ == '__main__':
     exec = Execution()
-    # exec.metadata = {"name": "test", "seed": 1}
-    # exec.dataset = {"type": "image", "file": "Lenna.png", "width": 10, "height": 10}
-    # exec.model = {"model": "standard", "nb_epochs": 50, "width": 10, "height": 10}
-    # exec.run()
-    # exec.compute_metrics()
-    # exec.save(os.path.join("Executions", "Test"))
-    exec.open(os.path.join("Executions", "Test", "test.json"))
+    exec.metadata = {"name": "test", "seed": 1}
+    exec.dataset = {"type": "random_image", "file": "Lenna.png", "width": 10, "height": 10}
+    exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
     exec.run()
+    exec.compute_metrics()
+    exec.save(os.path.join("Executions", "Test"))
+    # exec.open(os.path.join("Executions", "Test", "test.json"))
+    # exec.run()
