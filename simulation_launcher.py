@@ -11,7 +11,7 @@ class SimulationRun:
         self.folder_path = os.path.join("Executions", "Epochs")
 
     def create(self):
-        for i in range(10, 101, 2):
+        for i in range(102, 201, 2):
             for j in range(3):
                 exec = Execution()
                 exec.metadata = {"name": "Epoch"+str(i)+"-"+str(j+1), "seed": j+1}
@@ -45,4 +45,4 @@ if __name__ == '__main__':
     # sr.create()
     # sr.save()
     sr.open_folder(sr.folder_path)
-    sr.compute(3)
+    sr.compute(15)
