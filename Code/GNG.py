@@ -250,7 +250,9 @@ class GrowingNeuralGas:
     def display(self):
         reconstructed = self.img.reconstruct(self.get_reconstructed_data())
         # som_image = mosaic.reconstruct(gng.get_neural_list(), size=som.neurons_nbr)
-        print(self.square_error())
+        print("Error : ", self.square_error())
+        print("Neurons : ", len(self.network.nodes()))
+        print("Connections : ", len(self.network.edges()))
         plt.imshow(reconstructed)
         plt.show()
 

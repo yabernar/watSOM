@@ -8,15 +8,15 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "MapSize")
+        self.folder_path = os.path.join("Executions", "Epochs")
 
     def create(self):
-        for i in range(10, 26):
-            for j in range(5):
+        for i in range(10, 101, 2):
+            for j in range(3):
                 exec = Execution()
-                exec.metadata = {"name": "MapSize"+str(i)+"n-"+str(j+1), "seed": j+1}
+                exec.metadata = {"name": "Epoch"+str(i)+"-"+str(j+1), "seed": j+1}
                 exec.dataset = {"type": "image", "file": "Lenna.png", "width": 10, "height": 10}
-                exec.model = {"model": "standard", "nb_epochs": 30, "width": i, "height": i}
+                exec.model = {"model": "standard", "nb_epochs": i, "width": 10, "height": 10}
                 self.all_runs.append(exec)
 
     def save(self):

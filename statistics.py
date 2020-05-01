@@ -26,7 +26,8 @@ class Statistics:
         y = []
         for e in self.all_runs:
             x.append(e.model["width"])
-            y.append(10 * np.log10(1 / e.metrics["Square_error"]))
+            y.append(e.metrics["Square_error"])
+            # y.append(10 * np.log10(1 / e.metrics["Square_error"]))
         ymin, ymax = min(y), max(y)
         plt.ylim(0.95 * ymin, 1.05 * ymax)
         plt.xlabel("Taille de la carte")

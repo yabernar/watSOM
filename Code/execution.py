@@ -78,15 +78,17 @@ class Execution:
         else:
             print("Error : Unknown model !")
 
-        if "initialisation" not in self.codebooks:
-            self.codebooks["initialisation"] = self.som.neurons.tolist()
+        # if "initialisation" not in self.codebooks:
+        #     self.codebooks["initialisation"] = self.som.neurons.tolist()
         for i in range(nb_epochs):
             # print("Epoch "+str(i+1))
-            if "Epoch "+str(i + 1) not in self.codebooks:
-                if self.training_data is not None:
-                    self.som.data = self.training_data.get_data(self.som.data.shape[0])
-                self.som.run_epoch()
-                self.codebooks["Epoch " + str(i + 1)] = copy.deepcopy(self.som.neurons.tolist())
+            # if "Epoch "+str(i + 1) not in self.codebooks:
+            #     if self.training_data is not None:
+            #         self.som.data = self.training_data.get_data(self.som.data.shape[0])
+            #     self.som.run_epoch()
+            #     # self.codebooks["Epoch " + str(i + 1)] = copy.deepcopy(self.som.neurons.tolist())
+            self.som.run_epoch()
+        self.codebooks["final"] = copy.deepcopy(self.som.neurons.tolist())
         self.som.data = self.data.get_data()
 
 
