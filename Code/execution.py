@@ -8,6 +8,8 @@ from PIL import Image
 from Code.FastSOM import FastSOM
 from Code.Parameters import Parameters, Variable
 from Code.SOM import SOM
+from Code.cdnet_evaluation import Comparator
+from Code.tracking_metrics import TrackingMetrics
 from Data.Mosaic_Image import MosaicImage
 from Data.random_image import RandomImage
 
@@ -58,6 +60,11 @@ class Execution:
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
             self.data = MosaicImage(img, parameters)
             self.training_data = RandomImage(img, parameters)
+        elif self.dataset["type"] == "tracking":
+            path = os.path.join("Data", "tracking", "dataset", "baseline", self.dataset["file"], "bkg.jpg")
+            img = Image.open(path)
+            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
+            self.data = MosaicImage(img, parameters)
         else:
             print("Error : No dataset type specified !")
 
@@ -97,9 +104,27 @@ class Execution:
         #     self.som.run_epoch()
         self.som.data = self.data.get_data()
 
-
     def compute_metrics(self):
         self.metrics["Square_error"] = self.som.square_error()
+        if self.dataset["type"] == "tracking":
+            current_path = os.path.join("Data", "tracking", "dataset", "baseline", self.dataset["file"])
+            input_path = os.path.join(current_path, "input")
+            roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
+            temporal_roi = (int(roi_file[0]), int(roi_file[1]))
+            mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
+
+            base = os.path.join("Results", "SOM_Executions", self.metadata["name"], "results")
+            output_path = os.path.join(base, "baseline", self.dataset["file"])
+            supplements_path = os.path.join(base, "supplements")
+
+            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
+
+            trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi, parameters=parameters)
+            trackingMetric.compute(self.som)
+            cmp = Comparator()
+            fitness = cmp.evaluate__folder_c(current_path, output_path)
+            # print(fitness)
+            self.metrics["fmeasure"] = fitness
 
     def full_simulation(self, path):
         self.run()
@@ -108,12 +133,20 @@ class Execution:
         print("Simulation", self.metadata["name"], "ended")
 
 if __name__ == '__main__':
+    # exec = Execution()
+    # exec.metadata = {"name": "test", "seed": 1}
+    # exec.dataset = {"type": "random_image", "file": "Lenna.png", "width": 10, "height": 10}
+    # exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
+    # exec.run()
+    # exec.compute_metrics()
+    # exec.save(os.path.join("Executions", "Test"))
+    # exec.open(os.path.join("Executions", "Test", "test.json"))
+    # exec.run()
+
     exec = Execution()
     exec.metadata = {"name": "test", "seed": 1}
-    exec.dataset = {"type": "random_image", "file": "Lenna.png", "width": 10, "height": 10}
+    exec.dataset = {"type": "tracking", "file": "office", "width": 10, "height": 10}
     exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
     exec.run()
     exec.compute_metrics()
     exec.save(os.path.join("Executions", "Test"))
-    # exec.open(os.path.join("Executions", "Test", "test.json"))
-    # exec.run()

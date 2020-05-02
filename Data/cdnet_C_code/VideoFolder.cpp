@@ -52,7 +52,6 @@ void VideoFolder::setExtension() {
 	vector<string> exts(extensions, extensions + 5);
 
 	const string firstBinaryFrame = binaryFrame(range.first);
-
 	for (auto it = exts.begin(); it < exts.end(); ++it) {
 		const string &ext = *it;
 		if (fileExists(binaryPath + "bin" + toFrameNumber(range.first) + ext)) {

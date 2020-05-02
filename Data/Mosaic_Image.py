@@ -50,7 +50,7 @@ class MosaicImage:
             px2.append(np.concatenate(lst, axis=1))
             lst2 += (px2[i],)
         px = np.concatenate(lst2, axis=0)
-        print(px.shape)
+        # print(px.shape)
         px *= 255
         px = np.array(px, 'uint8')
         return px

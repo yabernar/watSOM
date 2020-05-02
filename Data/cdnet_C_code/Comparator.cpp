@@ -67,7 +67,7 @@ void Comparator::compare(const BinaryFrame& binary, const GTFrame& gt) {
 }
 
 void Comparator::save() const {
-	const string filePath = videoFolder.getVideoPath() + "fmeasure.txt";
+	const string filePath = videoFolder.getOutputPath() + "fmeasure.txt";
 	ofstream f(filePath.c_str(), ios::out);
 	if (f.is_open()) {
 	    double precision = tp / (double)(tp + fp);

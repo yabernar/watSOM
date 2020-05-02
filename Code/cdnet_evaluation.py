@@ -37,8 +37,13 @@ class Comparator:
         return np.mean(np.asarray(fmeasures))
 
     def evaluate__folder_c(self, input_path, output_path):
-        subprocess.call(["./comparator", input_path, output_path], cwd="/users/yabernar/workspace/watSOM/Data/cdnet_C_code/")
-        f = open(os.path.join(input_path, "fmeasure.txt"))
+        base = "../../"
+        input_path_linux = base + input_path.replace('\\', "/")
+        output_path_linux = base + output_path.replace('\\', "/")
+        # subprocess.call(["bash", "-c", "cd ../../;ls"], cwd=os.path.join("Data", "cdnet_C_code"))
+        subprocess.call(["bash", "-c", "./comparator "+input_path_linux+" "+output_path_linux], cwd=os.path.join("Data", "cdnet_C_code"))
+        # subprocess.call(["bash", "-c", "./comparator "+input_path+" "+output_path], cwd="/Data/cdnet_C_code/", shell=True)
+        f = open(os.path.join(output_path, "fmeasure.txt"))
         fmeasure = float(f.readline())
         return fmeasure
 
