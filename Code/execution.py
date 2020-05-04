@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
     exec = Execution()
     exec.metadata = {"name": "test", "seed": 1}
-    exec.dataset = {"type": "tracking", "file": "office", "width": 10, "height": 10}
+    exec.dataset = {"type": "tracking", "file": "highway", "width": 11, "height": 11}
     exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
     exec.run()
     exec.compute_metrics()

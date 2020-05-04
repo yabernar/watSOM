@@ -64,7 +64,8 @@ class TrackingMetrics:
         thresholded = som_difference_modulated.convert('L').point(fn, mode='1')
 
         # result = ImageChops.multiply(thresholded, self.mask)
-        result = thresholded
+        result = Image.new("L", current.size)
+        result.paste(thresholded, (0, 0))
         # Saving
         if save:
             som_difference.save(os.path.join(supplements_path, "difference", "dif{0:06d}.png".format(image_nb)))
