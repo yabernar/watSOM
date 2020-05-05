@@ -202,7 +202,10 @@ class GrowingNeuralGas:
             # if winners[i] == old_winners[i]:
             #     distances[i] = 0
             # else:
-            distances[i] = nx.shortest_path_length(self.network, winners[i], old_winners[i])
+            try:
+                distances[i] = nx.shortest_path_length(self.network, winners[i], old_winners[i])
+            except nx.NetworkXNoPath:
+                distances[i] = self.units_created
         return distances
 
     # def plot_network(self, file_path):
@@ -277,7 +280,7 @@ if __name__ == '__main__':
     data = img.get_data()
     gng = GrowingNeuralGas(data)
     gng.img = img
-    gng.fit_network(e_b=0.1, e_n=0.006, a_max=10, l=200, a=0.5, d=0.995, passes=30, plot_evolution=False)
+    gng.fit_network(e_b=0.1, e_n=0.006, a_max=10, l=200, a=0.5, d=0.995, passes=100, plot_evolution=False)
     reconstructed = img.reconstruct(gng.get_reconstructed_data())
     # som_image = mosaic.reconstruct(gng.get_neural_list(), size=som.neurons_nbr)
     # print(gng.get_all_winners())
