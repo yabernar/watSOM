@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 
 from Code.FastSOM import FastSOM
+from Code.GNG import GrowingNeuralGas
 from Code.Parameters import Parameters, Variable
 from Code.SOM import SOM
 from Code.cdnet_evaluation import Comparator
@@ -41,7 +42,6 @@ class Execution:
         self.metadata = data["metadata"]
         self.dataset = data["dataset"]
         self.model = data["model"]
-        # self.codebooks["Epoch 30"] = data["codebooks"]["Epoch 30"]
         self.metrics = data["metrics"]
 
     def save(self, path):
@@ -70,6 +70,20 @@ class Execution:
 
     def run(self):
         np.random.seed(self.metadata["seed"])
+        if self.model["model"] == "gng":
+            self.runGNG()
+        else:
+            self.runSOMS()
+
+    def runGNG(self):
+        if self.data is None:
+            self.load_dataset()
+        nb_epochs = self.model["nb_epochs"]
+        self.som = GrowingNeuralGas(self.data.get_data())
+        self.som.img = self.data
+        self.som.fit_network(e_b=0.1, e_n=0.006, a_max=10, l=200, a=0.5, d=0.995, passes=nb_epochs, plot_evolution=False)
+
+    def runSOMS(self):
         if self.data is None:
             self.load_dataset()
         nb_epochs = self.model["nb_epochs"]
@@ -106,6 +120,8 @@ class Execution:
 
     def compute_metrics(self):
         self.metrics["Square_error"] = self.som.square_error()
+        self.metrics["Neurons"] = len(self.som.network.nodes())
+        self.metrics["Connections"] = len(self.som.network.edges())
         if self.dataset["type"] == "tracking":
             current_path = os.path.join("Data", "tracking", "dataset", "baseline", self.dataset["file"])
             input_path = os.path.join(current_path, "input")
@@ -145,8 +161,9 @@ if __name__ == '__main__':
 
     exec = Execution()
     exec.metadata = {"name": "test", "seed": 1}
-    exec.dataset = {"type": "tracking", "file": "highway", "width": 11, "height": 11}
-    exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
+    exec.dataset = {"type": "tracking", "file": "highway", "width": 10, "height": 10}
+    # exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
+    exec.model = {"model": "gng", "nb_epochs": 20}
     exec.run()
     exec.compute_metrics()
     exec.save(os.path.join("Executions", "Test"))

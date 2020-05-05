@@ -31,6 +31,10 @@ class GrowingNeuralGas:
         self.units_created = 0
         plt.style.use('ggplot')
 
+    def set_data(self, input_data):
+        self.data = copy.deepcopy(input_data)
+        self.working_data = copy.deepcopy(input_data)
+
     def find_nearest_units(self, observation):
         distance = []
         for u, attributes in self.network.nodes(data=True):
@@ -74,9 +78,9 @@ class GrowingNeuralGas:
         # 1. iterate through the data
         sequence = 0
         for p in range(passes):
-            if p % 20 == 0 and p > 0:
-                self.display()
-            print('   Pass #%d' % (p + 1))
+            # if p % 20 == 0 and p > 0:
+            #     self.display()
+            # print('   Pass #%d' % (p + 1))
             np.random.shuffle(self.data)
             steps = 0
             for observation in self.data:
@@ -190,6 +194,17 @@ class GrowingNeuralGas:
             r_data.append(self.network.nodes[u]['vector'])
         return r_data
 
+    def get_neural_distances(self, old_winners):
+        winners = self.get_all_winners()
+        distances = np.zeros(winners.shape)
+        for i in range(len(winners)):
+            # print(i, winners.shape, winners[i], old_winners[i])
+            # if winners[i] == old_winners[i]:
+            #     distances[i] = 0
+            # else:
+            distances[i] = nx.shortest_path_length(self.network, winners[i], old_winners[i])
+        return distances
+
     # def plot_network(self, file_path):
     #     plt.clf()
     #     plt.scatter(self.data[:, 0], self.data[:, 1])
@@ -258,14 +273,24 @@ class GrowingNeuralGas:
 
 
 if __name__ == '__main__':
-    img = MosaicImage(Image.open(os.path.join("Data", "Images", "Lenna.png")), Parameters({"pictures_dim": [10, 10]}))
+    img = MosaicImage(Image.open(os.path.join("Data", "Tracking", "Dataset", "baseline", "highway", "bkg.jpg")), Parameters({"pictures_dim": [16, 16]}))
     data = img.get_data()
     gng = GrowingNeuralGas(data)
     gng.img = img
-    gng.fit_network(e_b=0.1, e_n=0.006, a_max=10, l=200, a=0.5, d=0.995, passes=500, plot_evolution=False)
+    gng.fit_network(e_b=0.1, e_n=0.006, a_max=10, l=200, a=0.5, d=0.995, passes=30, plot_evolution=False)
     reconstructed = img.reconstruct(gng.get_reconstructed_data())
     # som_image = mosaic.reconstruct(gng.get_neural_list(), size=som.neurons_nbr)
-    print(gng.get_all_winners())
+    # print(gng.get_all_winners())
     plt.imshow(reconstructed)
     plt.show()
+    print(len(gng.network.nodes))
+
+    img2 = MosaicImage(Image.open(os.path.join("Data", "Tracking", "Dataset", "baseline", "highway", "input", "in001010.jpg")), Parameters({"pictures_dim": [16, 16]}))
+    data2 = img2.get_data()
+    old_winners = gng.get_all_winners()
+    gng.data = data2
+    gng.working_data = data2
+    dists = gng.get_neural_distances(old_winners)
+    with np.printoptions(threshold=np.inf, suppress=True, linewidth=720):
+        print(dists)
     # plt.imshow(som_image, cmap='gray')
