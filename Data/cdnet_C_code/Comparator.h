@@ -13,7 +13,7 @@ class Comparator
 	public:
 		Comparator(const VideoFolder &videoFolder);
 
-		void compare();
+		void compare(const uint nbSteps);
 		void save() const;
 
 	private:

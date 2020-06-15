@@ -11,9 +11,10 @@ class SimulationRun:
         self.folder_path = os.path.join("Executions", "office_tracking")
 
     def create(self):
-        for i in range(3, 21):
-            for j in range(3):
-                for k in range(5, 31):
+        os.makedirs(self.folder_path, exist_ok=True)
+        for i in range(5, 7):
+            for j in range(1):
+                for k in range(25, 27):
                     exec = Execution()
                     exec.metadata = {"name": "office"+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
                     exec.dataset = {"type": "tracking", "file": "office", "width": k, "height": k}
@@ -40,10 +41,16 @@ class SimulationRun:
         pool.close()
         pool.join()
 
+    def evaluate(self, nb_cores=1):
+        pool = mp.Pool(nb_cores)
+        pool.starmap(Execution.full_step_evaluation, zip(self.all_runs, itertools.repeat(sr.folder_path)))
+        pool.close()
+        pool.join()
+
 
 if __name__ == '__main__':
     sr = SimulationRun()
     # sr.create()
     # sr.save()
     sr.open_folder(sr.folder_path)
-    sr.compute(15)
+    sr.evaluate(4)

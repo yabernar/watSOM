@@ -142,6 +142,41 @@ class Execution:
             # print(fitness)
             self.metrics["fmeasure"] = fitness
 
+    def compute_steps_metrics(self):
+        # self.metrics["Square_error"] = self.som.square_error()
+        # self.metrics["Neurons"] = len(self.som.network.nodes())
+        # self.metrics["Connections"] = len(self.som.network.edges())
+        if self.dataset["type"] == "tracking":
+            current_path = os.path.join("Data", "tracking", "dataset", "baseline", self.dataset["file"])
+            input_path = os.path.join(current_path, "input")
+            roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
+            temporal_roi = (int(roi_file[0]), int(roi_file[1]))
+            mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
+
+            base = os.path.join("Results", "SOM_Executions", self.metadata["name"], "results")
+            output_path = os.path.join(base, "baseline", self.dataset["file"])
+            supplements_path = os.path.join(base, "supplements")
+
+            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
+
+            # trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi, parameters=parameters)
+            # trackingMetric.compute(self.som)
+            for i in range(1,5,1):
+                cmp = Comparator()
+                fitness = cmp.evaluate__folder_c(current_path, output_path, i)
+                # print(fitness)
+                self.metrics["fmeasure-s" + str(i)] = fitness
+            for i in range(5,101, 5):
+                cmp = Comparator()
+                fitness = cmp.evaluate__folder_c(current_path, output_path, i)
+            # print(fitness)
+                self.metrics["fmeasure-s"+str(i)] = fitness
+
+    def full_step_evaluation(self, path):
+        self.compute_steps_metrics()
+        self.save(path)
+        print("Simulation", self.metadata["name"], "ended")
+
     def full_simulation(self, path):
         self.run()
         self.compute_metrics()

@@ -15,16 +15,21 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
 
-	if (argc != 3) {
+	if (argc < 3 || argc > 4) {
 		cout << "first :" << argv[0] << endl;
 		cout << "second :" << argv[1] << endl;
 		cout << "third :" << argv[2] << endl;
-		cerr << "Usage : comparator.exe path\\to\\video\\ path\\to\\binaryFolder\\\n";
+		cout << "fourth (optional)" << argv[3] << endl;
+		cerr << "Usage : comparator.exe path\\to\\video\\ path\\to\\binaryFolder\\ [nbrSteps]\n";
 		return 0;
 	}
 
 	const string videoPath = argv[1];
 	const string binaryPath = argv[2];
+    uint nbrSteps = 1;
+	if (argc == 4){
+	    nbrSteps = stoi(argv[3]);
+    }
 
 	bool error = false;
 	VideoFolder videoFolder(videoPath, binaryPath);
@@ -39,7 +44,7 @@ int main(int argc, char *argv[]) {
 	if (!error) {
 		Comparator comparator(videoFolder);
 
-		comparator.compare();
+		comparator.compare(nbrSteps);
 		comparator.save();
 	}
 

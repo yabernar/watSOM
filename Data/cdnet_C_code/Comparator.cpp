@@ -9,7 +9,7 @@ Comparator::Comparator(const VideoFolder &videoFolder)
 	ROI(cv::imread(videoFolder.getVideoPath() + "ROI.bmp", 0))
 {}
 
-void Comparator::compare() {
+void Comparator::compare(const uint nbSteps) {
 	const Range range = videoFolder.getRange();
 	const uint fromIdx = range.first;
 	const uint toIdx = range.second;
@@ -18,7 +18,7 @@ void Comparator::compare() {
 	nbShadowErrors = 0;
 
 	// For each frame in the range, compare and calculate the statistics
-	for (uint t = fromIdx; t <= toIdx; t+=30) {
+	for (uint t = fromIdx; t <= toIdx; t+=nbSteps) {
 		compare(cv::imread(videoFolder.binaryFrame(t), 0),
 				cv::imread(videoFolder.gtFrame(t), 0));
 	}
