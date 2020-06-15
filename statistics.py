@@ -10,7 +10,7 @@ from matplotlib import cm
 class Statistics:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "GNG_Tracking")
+        self.folder_path = os.path.join("Executions", "office_tracking")
 
     def open_folder(self, path):
         for file in os.listdir(path):

@@ -149,9 +149,9 @@ class Execution:
         print("Simulation", self.metadata["name"], "ended")
 
 if __name__ == '__main__':
-    # exec = Execution()
+    exec = Execution()
     # exec.metadata = {"name": "test", "seed": 1}
-    # exec.dataset = {"type": "random_image", "file": "Lenna.png", "width": 10, "height": 10}
+    exec.dataset = {"type": "random_image", "file": "Lenna.png", "width": 10, "height": 10}
     # exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
     # exec.run()
     # exec.compute_metrics()
@@ -159,11 +159,12 @@ if __name__ == '__main__':
     # exec.open(os.path.join("Executions", "Test", "test.json"))
     # exec.run()
 
-    exec = Execution()
+    # exec = Execution()
     exec.metadata = {"name": "test", "seed": 1}
-    exec.dataset = {"type": "tracking", "file": "highway", "width": 10, "height": 10}
-    # exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
-    exec.model = {"model": "gng", "nb_epochs": 20}
+    # exec.dataset = {"type": "tracking", "file": "highway", "width": 10, "height": 10}
+    exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
+    # exec.model = {"model": "gng", "nb_epochs": 20}
     exec.run()
     exec.compute_metrics()
+    os.makedirs(os.path.join("Executions", "Test"), exist_ok=True)
     exec.save(os.path.join("Executions", "Test"))
