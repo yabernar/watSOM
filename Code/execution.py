@@ -120,8 +120,8 @@ class Execution:
 
     def compute_metrics(self):
         self.metrics["Square_error"] = self.som.square_error()
-        self.metrics["Neurons"] = len(self.som.network.nodes())
-        self.metrics["Connections"] = len(self.som.network.edges())
+        # self.metrics["Neurons"] = len(self.som.network.nodes())
+        # self.metrics["Connections"] = len(self.som.network.edges())
         if self.dataset["type"] == "tracking":
             current_path = os.path.join("Data", "tracking", "dataset", "baseline", self.dataset["file"])
             input_path = os.path.join(current_path, "input")

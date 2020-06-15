@@ -8,16 +8,17 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "GNG_tracking")
+        self.folder_path = os.path.join("Executions", "office_tracking")
 
     def create(self):
-        for i in range(20, 501, 20):
+        for i in range(3, 21):
             for j in range(3):
-                exec = Execution()
-                exec.metadata = {"name": "Epoch"+str(i)+"-"+str(j+1), "seed": j+1}
-                exec.dataset = {"type": "tracking", "file": "highway", "width": 15, "height": 15}
-                exec.model = {"model": "gng", "nb_epochs": i}
-                self.all_runs.append(exec)
+                for k in range(5, 31):
+                    exec = Execution()
+                    exec.metadata = {"name": "office"+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
+                    exec.dataset = {"type": "tracking", "file": "office", "width": k, "height": k}
+                    exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
+                    self.all_runs.append(exec)
 
     def save(self):
         for e in self.all_runs:
@@ -45,4 +46,4 @@ if __name__ == '__main__':
     # sr.create()
     # sr.save()
     sr.open_folder(sr.folder_path)
-    sr.compute(3)
+    sr.compute(15)
