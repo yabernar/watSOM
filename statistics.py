@@ -53,7 +53,6 @@ class Statistics:
 
         plt.show()
 
-
     def graph(self):
         x = []
         y = []
@@ -78,8 +77,42 @@ class Statistics:
 
         plt.show()
 
+
+        plt.show()
+
+    def variations_boxplot(self):
+        ranges = list(range(1, 5)) + list(range(5, 101, 5))
+        data = np.zeros((len(self.all_runs), len(ranges)))
+        j = 0
+        for e in self.all_runs:
+            for i in range(len(ranges)):
+                data[j, i] = e.metrics["fmeasure-s"+str(ranges[i])]
+            j += 1
+
+        print(data)
+
+        for i in range(len(self.all_runs)):
+            data[i, ::] -= data[i, 0]
+
+        print(data)
+
+        fig = plt.figure()
+        # ax = fig.gca(projection='3d')
+
+        # ax.set_zlim(0.95 * zmin, 1.05 * zmax)
+        plt.xticks([], ranges)
+        plt.xlabel("Image generation step")
+        plt.ylabel("fmeasure")
+        # plt.xlabel("Taille d'imagettes")
+        # ax.invert_xaxis()
+        # scatter = ax.scatter(x, y, z, cmap=cm.coolwarm)
+        plt.boxplot(data)
+
+        plt.show()
+
 if __name__ == '__main__':
     sr = Statistics()
     sr.open_folder(sr.folder_path)
-    sr.graph()
+    # sr.graph()
     # sr.surface_graph()
+    sr.variations_boxplot()

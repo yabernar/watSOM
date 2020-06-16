@@ -161,16 +161,12 @@ class Execution:
 
             # trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi, parameters=parameters)
             # trackingMetric.compute(self.som)
-            for i in range(1,5,1):
+            ranges = list(range(1, 5)) + list(range(5, 101, 5))
+            for i in ranges:
                 cmp = Comparator()
                 fitness = cmp.evaluate__folder_c(current_path, output_path, i)
                 # print(fitness)
                 self.metrics["fmeasure-s" + str(i)] = fitness
-            for i in range(5,101, 5):
-                cmp = Comparator()
-                fitness = cmp.evaluate__folder_c(current_path, output_path, i)
-            # print(fitness)
-                self.metrics["fmeasure-s"+str(i)] = fitness
 
     def full_step_evaluation(self, path):
         self.compute_steps_metrics()
