@@ -8,18 +8,30 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "office_tracking")
+        self.folder_path = os.path.join("Executions", "full_dataset")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
-        for i in range(5, 7):
-            for j in range(1):
-                for k in range(25, 27):
-                    exec = Execution()
-                    exec.metadata = {"name": "office"+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
-                    exec.dataset = {"type": "tracking", "file": "office", "width": k, "height": k}
-                    exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
-                    self.all_runs.append(exec)
+
+        videos_files = []
+        cdnet_path = os.path.join("Data", "tracking", "dataset")
+        categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
+        for cat in categories:
+            elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
+            for elem in elements:
+                videos_files.append(os.path.join(cat, elem))
+
+        print(videos_files)
+
+        for v in videos_files:
+            for i in range(5, 7):
+                for j in range(1):
+                    for k in range(26, 27):
+                        exec = Execution()
+                        exec.metadata = {"name": v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
+                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
+                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
+                        self.all_runs.append(exec)
 
     def save(self):
         for e in self.all_runs:
@@ -50,7 +62,7 @@ class SimulationRun:
 
 if __name__ == '__main__':
     sr = SimulationRun()
-    # sr.create()
-    # sr.save()
+    sr.create()
+    sr.save()
     sr.open_folder(sr.folder_path)
-    sr.evaluate(4)
+    sr.compute(4)

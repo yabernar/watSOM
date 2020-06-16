@@ -61,7 +61,7 @@ class Execution:
             self.data = MosaicImage(img, parameters)
             self.training_data = RandomImage(img, parameters)
         elif self.dataset["type"] == "tracking":
-            path = os.path.join("Data", "tracking", "dataset", "baseline", self.dataset["file"], "bkg.jpg")
+            path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "bkg.jpg")
             img = Image.open(path)
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
             self.data = MosaicImage(img, parameters)
@@ -123,22 +123,24 @@ class Execution:
         # self.metrics["Neurons"] = len(self.som.network.nodes())
         # self.metrics["Connections"] = len(self.som.network.edges())
         if self.dataset["type"] == "tracking":
-            current_path = os.path.join("Data", "tracking", "dataset", "baseline", self.dataset["file"])
+            nb_img_gen = self.dataset["nb_images_evals"] if self.dataset["nb_images_evals"] is not None else 50
+            current_path = os.path.join("Data", "tracking", "dataset", self.dataset["file"])
             input_path = os.path.join(current_path, "input")
             roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
             temporal_roi = (int(roi_file[0]), int(roi_file[1]))
+            step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
             mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
 
             base = os.path.join("Results", "SOM_Executions", self.metadata["name"], "results")
-            output_path = os.path.join(base, "baseline", self.dataset["file"])
+            output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
-            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
+            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]], "step": step})
 
             trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi, parameters=parameters)
             trackingMetric.compute(self.som)
             cmp = Comparator()
-            fitness = cmp.evaluate__folder_c(current_path, output_path)
+            fitness = cmp.evaluate__folder_c(current_path, output_path, step)
             # print(fitness)
             self.metrics["fmeasure"] = fitness
 
@@ -147,14 +149,14 @@ class Execution:
         # self.metrics["Neurons"] = len(self.som.network.nodes())
         # self.metrics["Connections"] = len(self.som.network.edges())
         if self.dataset["type"] == "tracking":
-            current_path = os.path.join("Data", "tracking", "dataset", "baseline", self.dataset["file"])
+            current_path = os.path.join("Data", "tracking", "dataset", self.dataset["file"])
             input_path = os.path.join(current_path, "input")
             roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
             temporal_roi = (int(roi_file[0]), int(roi_file[1]))
             mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
 
             base = os.path.join("Results", "SOM_Executions", self.metadata["name"], "results")
-            output_path = os.path.join(base, "baseline", self.dataset["file"])
+            output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
