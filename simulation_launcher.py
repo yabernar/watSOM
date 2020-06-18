@@ -8,7 +8,7 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "full_dataset")
+        self.folder_path = os.path.join("Executions", "full_dataset_gng")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
@@ -30,7 +30,8 @@ class SimulationRun:
                         exec = Execution()
                         exec.metadata = {"name": v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
                         exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
-                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
+                        # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
+                        exec.model = {"model": "gng", "nb_epochs": 100, "nb_neurons": i*i}
                         self.all_runs.append(exec)
 
     def save(self):

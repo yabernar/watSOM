@@ -23,8 +23,8 @@ class SOM:
         self.iteration = 0
         self.max_iterations = self.epochs_nbr * self.data.shape[0]
 
-    def set_data(self, data):
-        self.data = data
+    def set_data(self, input_data):
+        self.data = input_data
 
     def winner(self, vector):
         dist = np.empty(self.neurons_nbr, dtype=float)
@@ -123,7 +123,7 @@ class SOM:
         return np.reshape(self.neurons, (-1,) + self.data.shape[1:])
 
     def mean_error(self, winners=None):
-        if not winners:
+        if winners is None:
             winners = self.get_all_winners()
         error = np.zeros(winners.shape)
         for i in np.ndindex(winners.shape):
@@ -131,7 +131,7 @@ class SOM:
         return np.mean(error)
 
     def square_error(self, winners=None):
-        if not winners:
+        if winners is None:
             winners = self.get_all_winners()
         error = np.zeros(winners.shape)
         for i in np.ndindex(winners.shape):

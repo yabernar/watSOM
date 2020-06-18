@@ -25,7 +25,7 @@ class Execution:
 
         self.data = None
         self.training_data = None
-        self.som = None
+        self.map = None
 
     def open(self, path):
         txt = codecs.open(path, 'r', encoding='utf-8').read()
@@ -73,17 +73,23 @@ class Execution:
         if self.model["model"] == "gng":
             self.runGNG()
         else:
-            self.runSOMS()
+            self.runSOM()
 
     def runGNG(self):
         if self.data is None:
             self.load_dataset()
-        nb_epochs = self.model["nb_epochs"]
-        self.som = GrowingNeuralGas(self.data.get_data())
-        self.som.img = self.data
-        self.som.fit_network(e_b=0.1, e_n=0.006, a_max=10, l=200, a=0.5, d=0.995, passes=nb_epochs, plot_evolution=False)
+        inputs = Parameters({"epsilon_winner": 0.1,
+                             "epsilon_neighbour": 0.006,
+                             "maximum_age": 10,
+                             "error_decrease_new_unit": 0.5,
+                             "error_decrease_global": 0.995,
+                             "data": self.data.get_data(),
+                             "neurons_nbr": self.model["nb_neurons"],
+                             "epochs_nbr": self.model["nb_epochs"]})
+        self.map = GrowingNeuralGas(inputs)
+        self.map.run()
 
-    def runSOMS(self):
+    def runSOM(self):
         if self.data is None:
             self.load_dataset()
         nb_epochs = self.model["nb_epochs"]
@@ -93,20 +99,20 @@ class Execution:
                                  "neurons_nbr": (self.model["width"], self.model["height"]),
                                  "epochs_nbr": nb_epochs})
         if self.model["model"] == "standard":
-            self.som = SOM(parameters)
+            self.map = SOM(parameters)
         elif self.model["model"] == "fast":
-            self.som = FastSOM(parameters)
+            self.map = FastSOM(parameters)
         else:
             print("Error : Unknown model !")
 
         # if "initialisation" not in self.codebooks:
         #     self.codebooks["initialisation"] = self.som.neurons.tolist()
         if "final" in self.codebooks:
-            self.som.neurons = np.asarray(self.codebooks["final"])
+            self.map.neurons = np.asarray(self.codebooks["final"])
         else:
             for i in range(nb_epochs):
-                self.som.run_epoch()
-            self.codebooks["final"] = copy.deepcopy(self.som.neurons.tolist())
+                self.map.run_epoch()
+            self.codebooks["final"] = copy.deepcopy(self.map.neurons.tolist())
 
         # for i in range(nb_epochs):
         #     print("Epoch "+str(i+1))
@@ -116,10 +122,10 @@ class Execution:
         #         self.som.run_epoch()
         #         # self.codebooks["Epoch " + str(i + 1)] = copy.deepcopy(self.som.neurons.tolist())
         #     self.som.run_epoch()
-        self.som.data = self.data.get_data()
+        self.map.data = self.data.get_data()
 
     def compute_metrics(self):
-        self.metrics["Square_error"] = self.som.square_error()
+        self.metrics["Square_error"] = self.map.square_error()
         # self.metrics["Neurons"] = len(self.som.network.nodes())
         # self.metrics["Connections"] = len(self.som.network.edges())
         if self.dataset["type"] == "tracking":
@@ -138,7 +144,7 @@ class Execution:
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]], "step": step})
 
             trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi, parameters=parameters)
-            trackingMetric.compute(self.som)
+            trackingMetric.compute(self.map)
             cmp = Comparator()
             fitness = cmp.evaluate__folder_c(current_path, output_path, step)
             # print(fitness)
