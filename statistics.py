@@ -11,6 +11,7 @@ class Statistics:
     def __init__(self):
         self.all_runs = []
         self.folder_path = os.path.join("Executions", "office_tracking")
+        self.results_path = os.path.join("Statistics", "cdnet_som")
 
     def open_folder(self, path):
         for file in os.listdir(path):
@@ -22,14 +23,29 @@ class Statistics:
                 exec.light_open(full_path)
                 self.all_runs.append(exec)
 
-    def surface_graph(self):
+    def cdnet_surface(self):
+        os.makedirs(self.results_path, exist_ok=True)
+
+        videos_files = []
+        cdnet_path = os.path.join("Data", "tracking", "dataset")
+        categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
+        for cat in categories:
+            elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
+            for elem in elements:
+                videos_files.append(os.path.join(cat, elem))
+        for file in videos_files:
+            fig = self.surface_graph(file)
+            plt.savefig(os.path.join(self.results_path, file.replace("/", "_").replace("\\", "_") + ".png"))
+
+    def surface_graph(self, file=None):
         x = []
         y = []
         z = []
         for e in self.all_runs:
-            x.append(e.dataset["width"])
-            y.append(e.model["width"])
-            z.append(e.metrics["fmeasure"])
+            if file is None or file == e.dataset["file"]:
+                x.append(e.dataset["width"])
+                y.append(e.model["width"])
+                z.append(e.metrics["fmeasure"])
             # y.append(10 * np.log10(1 / e.metrics["Square_error"]))
         zmin, zmax = min(z), max(z)
 
@@ -51,7 +67,7 @@ class Statistics:
         ax.invert_xaxis()
         surf = ax.plot_surface(X, Y, surface, cmap=cm.coolwarm)
 
-        plt.show()
+        return fig
 
     def graph(self):
         x = []
@@ -114,5 +130,6 @@ if __name__ == '__main__':
     sr = Statistics()
     sr.open_folder(sr.folder_path)
     # sr.graph()
-    # sr.surface_graph()
-    sr.variations_boxplot()
+    sr.surface_graph()
+    # sr.variations_boxplot()
+    plt.show()
