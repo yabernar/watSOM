@@ -3,9 +3,12 @@ import sys
 import numpy as np
 import matplotlib
 from PIL import Image
+from PyQt5.QtWidgets import QSlider
+
 matplotlib.use('Qt5Agg')
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.Qt import *
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
@@ -35,10 +38,26 @@ class Navigation(QtWidgets.QGroupBox):
         self.category.currentIndexChanged.connect(self.fill_elements)
         self.element.currentIndexChanged.connect(self.update_path)
 
+        self.current_image = QDoubleSpinBox()
+        self.current_image.setDecimals(0)
+        self.current_image.setRange(1, 5000)
+        self.current_image.valueChanged.connect(self.update_image)
+
+        self.fps = QDoubleSpinBox()
+        self.fps.setDecimals(0)
+        self.fps.setRange(1, 60)
+        self.fps.setValue(30)
+        self.fps.valueChanged.connect(self.update_fps)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.timer_tick)
+        self.timer.setInterval(1000//int(self.fps.value()))
+
         button_stop = QtWidgets.QPushButton('Stop', self)
         button_start = QtWidgets.QPushButton('Start', self)
 
-        self.
+        button_start.clicked.connect(self.timer.start)
+        button_stop.clicked.connect(self.timer.stop)
 
 
         self.layout.addWidget(QtWidgets.QLabel("Category", alignment=QtCore.Qt.AlignCenter), 0, 0)
@@ -47,9 +66,11 @@ class Navigation(QtWidgets.QGroupBox):
         self.layout.addWidget(self.element, 1, 1)
         self.layout.addWidget(button_start, 0, 2)
         self.layout.addWidget(button_stop, 1, 2)
+        self.layout.addWidget(QtWidgets.QLabel("Current image", alignment=QtCore.Qt.AlignCenter), 0, 3)
+        self.layout.addWidget(self.current_image, 0, 4)
+        self.layout.addWidget(QtWidgets.QLabel("FPS", alignment=QtCore.Qt.AlignCenter), 1, 3)
+        self.layout.addWidget(self.fps, 1, 4)
 
-        self.layout.setRowStretch(2, 2)
-        self.layout.setRowStretch(3, 2)
 
         self.setLayout(self.layout)
 
@@ -66,10 +87,25 @@ class Navigation(QtWidgets.QGroupBox):
         for elem in elements:
             self.element.addItem(elem)
 
-    def update_path(self):
-        global current_path
-        current_path = os.path.join("Data", "tracking", "dataset", self.category.currentText(), self.element.currentText())
+    def timer_tick(self):
+        self.current_image.setValue(self.current_image.value()+1)
+
+    def update_fps(self):
+        self.timer.setInterval(1000//int(self.fps.value()))
+
+    def update_image(self):
+        global current_image
+        current_image = int(self.current_image.value())
         self.app.display.update_plot()
+
+    def update_path(self):
+        global current_path, current_image
+        current_path = os.path.join("Data", "tracking", "dataset", self.category.currentText(), self.element.currentText())
+        roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
+        temporal_roi = (int(roi_file[0]), int(roi_file[1]))
+        self.current_image.setValue(temporal_roi[0])
+        # current_image = int(self.current_image.value())
+        # self.app.display.update_plot()
 
 
 class Display(QtWidgets.QGroupBox):
@@ -106,14 +142,20 @@ class Display(QtWidgets.QGroupBox):
 class MplCanvas(QtWidgets.QGroupBox):
     def __init__(self, subject):
         super().__init__()
-        fig = Figure(figsize=(5, 4), dpi=100)
-        self.axes = fig.add_subplot(111)
+        self.fig = Figure(figsize=(5, 4), dpi=100)
+        self.axes = self.fig.add_subplot(111)
         self.subject = subject
         current = plot_types[self.subject](self)
+
+        self.canvas = FigureCanvasQTAgg(self.fig)
+        self.canvas.draw()
+        self.axbackground = self.fig.canvas.copy_from_bbox(self.axes.bbox)
+
         self.plot = self.axes.imshow(current)
 
-        self.canvas = FigureCanvasQTAgg(fig)
+
         toolbar = NavigationToolbar(self.canvas, self)
+
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(toolbar)
@@ -123,7 +165,15 @@ class MplCanvas(QtWidgets.QGroupBox):
     def update_plot(self):
         current = plot_types[self.subject](self)
         self.plot.set_data(current)
-        self.canvas.draw()
+        self.fig.canvas.restore_region(self.axbackground)
+        # redraw just the points
+        self.axes.draw_artist(self.plot)
+
+        # fill in the axes rectangle
+        self.fig.canvas.blit(self.axes.bbox)
+
+        self.fig.canvas.flush_events()
+        # self.canvas.draw()
 
     # Content switch section
     def input_video(self):
