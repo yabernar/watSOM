@@ -45,8 +45,10 @@ class Execution:
         self.metrics = data["metrics"]
 
     def save(self, path):
-        data = {"metadata": self.metadata, "dataset": self.dataset, "model": self.model, "metrics": self.metrics, "codebooks": self.codebooks}
-        json.dump(data,  codecs.open(os.path.join(path, self.metadata["name"] + ".json"), 'w', encoding='utf-8'),  indent=2)
+        data = {"metadata": self.metadata, "dataset": self.dataset, "model": self.model, "metrics": self.metrics,
+                "codebooks": self.codebooks}
+        json.dump(data, codecs.open(os.path.join(path, self.metadata["name"] + ".json"), 'w', encoding='utf-8'),
+                  indent=2)
 
     def load_dataset(self):
         if self.dataset["type"] == "image":
@@ -129,21 +131,25 @@ class Execution:
         # self.metrics["Neurons"] = len(self.som.network.nodes())
         # self.metrics["Connections"] = len(self.som.network.edges())
         if self.dataset["type"] == "tracking":
-            nb_img_gen = self.dataset["nb_images_evals"] if self.dataset["nb_images_evals"] is not None else 50
             current_path = os.path.join("Data", "tracking", "dataset", self.dataset["file"])
             input_path = os.path.join(current_path, "input")
             roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
             temporal_roi = (int(roi_file[0]), int(roi_file[1]))
-            step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
             mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
 
-            base = os.path.join("Results", "SOM_Executions", self.metadata["name"], "results")
+            nb_img_gen = self.dataset["nb_images_evals"] if self.dataset["nb_images_evals"] is not None else 50
+            step = 1
+            if nb_img_gen > 0:
+                step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
+
+            base = os.path.join("Results", "Visualizations", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]], "step": step})
 
-            trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi, parameters=parameters)
+            trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi,
+                                             parameters=parameters)
             trackingMetric.compute(self.map)
             cmp = Comparator()
             fitness = cmp.evaluate__folder_c(current_path, output_path, step)
@@ -186,6 +192,7 @@ class Execution:
         self.compute_metrics()
         self.save(path)
         print("Simulation", self.metadata["name"], "ended")
+
 
 if __name__ == '__main__':
     exec = Execution()

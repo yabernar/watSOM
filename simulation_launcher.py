@@ -8,7 +8,7 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "full_dataset_gng")
+        self.folder_path = os.path.join("Executions", "Visualizations", "GNG")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
@@ -24,12 +24,12 @@ class SimulationRun:
         print(videos_files)
 
         for v in videos_files:
-            for i in range(5, 7):
+            for i in range(13, 14):
                 for j in range(1):
-                    for k in range(26, 27):
+                    for k in range(21, 22):
                         exec = Execution()
                         exec.metadata = {"name": v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
-                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
+                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": -1, "width": k, "height": k}
                         # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
                         exec.model = {"model": "gng", "nb_epochs": 100, "nb_neurons": i*i}
                         self.all_runs.append(exec)
@@ -63,7 +63,7 @@ class SimulationRun:
 
 if __name__ == '__main__':
     sr = SimulationRun()
-    sr.create()
-    sr.save()
+    # sr.create()
+    # sr.save()
     sr.open_folder(sr.folder_path)
-    sr.compute(4)
+    sr.compute(7)

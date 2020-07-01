@@ -34,15 +34,23 @@ class Navigation(QtWidgets.QGroupBox):
         self.fill_elements()
         self.category.currentIndexChanged.connect(self.fill_elements)
         self.element.currentIndexChanged.connect(self.update_path)
+
         button_stop = QtWidgets.QPushButton('Stop', self)
         button_start = QtWidgets.QPushButton('Start', self)
+
+        self.
+
 
         self.layout.addWidget(QtWidgets.QLabel("Category", alignment=QtCore.Qt.AlignCenter), 0, 0)
         self.layout.addWidget(self.category, 1, 0)
         self.layout.addWidget(QtWidgets.QLabel("Element", alignment=QtCore.Qt.AlignCenter), 0, 1)
         self.layout.addWidget(self.element, 1, 1)
         self.layout.addWidget(button_start, 0, 2)
-        self.layout.addWidget(button_stop, 0, 3)
+        self.layout.addWidget(button_stop, 1, 2)
+
+        self.layout.setRowStretch(2, 2)
+        self.layout.setRowStretch(3, 2)
+
         self.setLayout(self.layout)
 
     def fill_categories(self):
@@ -69,13 +77,14 @@ class Display(QtWidgets.QGroupBox):
         super().__init__()
         global plot_types
         plot_types = {"input_video": MplCanvas.input_video,
-                        "background": MplCanvas.background,
-                        "groundtruth": MplCanvas.groundtruth,
-                        "statistics": MplCanvas.statistics}
+                      "background": MplCanvas.background,
+                      "groundtruth": MplCanvas.groundtruth,
+                      "statistics": MplCanvas.statistics,
+                      "statistics_gng": MplCanvas.statistics_gng}
         self.graphs = []
         self.graphs.append(MplCanvas("input_video"))
         self.graphs.append(MplCanvas("statistics"))
-        self.graphs.append(MplCanvas("statistics"))
+        self.graphs.append(MplCanvas("statistics_gng"))
         self.graphs.append(MplCanvas("groundtruth"))
         self.graphs.append(MplCanvas("groundtruth"))
         self.graphs.append(MplCanvas("groundtruth"))
@@ -130,6 +139,10 @@ class MplCanvas(QtWidgets.QGroupBox):
         name = current_path.split(os.path.sep)[3::]
         return Image.open(os.path.join("Statistics", "cdnet_som", name[0]+"_"+name[1]+".png"))
 
+    def statistics_gng(self):
+        name = current_path.split(os.path.sep)[3::]
+        return Image.open(os.path.join("Statistics", "cdnet_gng", name[0]+"_"+name[1]+".png"))
+
 class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
@@ -142,17 +155,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.display = Display()
         self.navigation = Navigation(self)
 
-
-        # self.table_clicks = QtWidgets.QTableWidget(0, 2)
-        # self.table_clicks.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-
-
         # layouts
-
         layout = QtWidgets.QGridLayout(self._main)
 
         layout.addWidget(self.display, 0, 0)
-        # layout.addWidget(self.table_clicks, 0, 1)
         layout.addWidget(self.navigation, 1, 0)
 
         layout.setColumnStretch(0, 2)
