@@ -152,9 +152,11 @@ class Execution:
                                              parameters=parameters)
             trackingMetric.compute(self.map)
             cmp = Comparator()
-            fitness = cmp.evaluate__folder_c(current_path, output_path, step)
+            fmeasure, precision, recall = cmp.evaluate__folder_c(current_path, output_path, step)
             # print(fitness)
-            self.metrics["fmeasure"] = fitness
+            self.metrics["fmeasure"] = fmeasure
+            self.metrics["precision"] = precision
+            self.metrics["recall"] = recall
 
     def compute_steps_metrics(self):
         # self.metrics["Square_error"] = self.som.square_error()

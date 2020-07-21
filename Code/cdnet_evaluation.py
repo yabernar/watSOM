@@ -43,9 +43,11 @@ class Comparator:
         # subprocess.call(["bash", "-c", "cd ../../;ls"], cwd=os.path.join("Data", "cdnet_C_code"))
         subprocess.call(["bash", "-c", "./comparator "+input_path_linux+" "+output_path_linux+" "+str(step)], cwd=os.path.join("Data", "cdnet_C_code"))
         # subprocess.call(["bash", "-c", "./comparator "+input_path+" "+output_path], cwd="/Data/cdnet_C_code/", shell=True)
-        f = open(os.path.join(output_path, "fmeasure.txt"))
+        f = open(os.path.join(output_path, "fpr.txt"))
         fmeasure = float(f.readline())
-        return fmeasure
+        precision = float(f.readline())
+        recall = float(f.readline())
+        return fmeasure, precision, recall
 
     def evaluate_video(self, input_path, output_path, roi, indexes):
         np.floor_divide(roi, roi.max(), out=roi)

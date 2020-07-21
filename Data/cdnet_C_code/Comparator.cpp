@@ -76,7 +76,9 @@ void Comparator::save() const {
 	    if (precision + recall > 0) {
 	        fmeasure = (2*precision*recall)/(precision+recall);
 	    }
-		f << fmeasure;
+		f << fmeasure << std::endl;
+		f << precision << std::endl;
+		f << recall;
 		f.close();
 	} else {
 		throw string("Unable to open the file : ") + filePath;
