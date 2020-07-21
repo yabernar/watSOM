@@ -146,7 +146,7 @@ class Execution:
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
-            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]], "step": step})
+            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]], "step": step, "cut": self.model["cut"]})
 
             trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi,
                                              parameters=parameters)

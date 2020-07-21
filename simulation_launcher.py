@@ -8,30 +8,31 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "Visualizations", "GNG")
+        self.folder_path = os.path.join("Executions", "Cut")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
+
+        exclusion_list = ["intermittentObjectMotion", "lowFramerate", "PTZ"]
 
         videos_files = []
         cdnet_path = os.path.join("Data", "tracking", "dataset")
         categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
         for cat in categories:
-            elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
-            for elem in elements:
-                videos_files.append(os.path.join(cat, elem))
-
-        print(videos_files)
+            if cat not in exclusion_list:
+                elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
+                for elem in elements:
+                    videos_files.append(os.path.join(cat, elem))
 
         for v in videos_files:
             for i in range(13, 14):
-                for j in range(1):
+                for j in range(13):
                     for k in range(21, 22):
                         exec = Execution()
-                        exec.metadata = {"name": v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
-                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": -1, "width": k, "height": k}
+                        exec.metadata = {"name": v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": 1}
+                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
                         # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
-                        exec.model = {"model": "gng", "nb_epochs": 100, "nb_neurons": i*i}
+                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i, "cut": j}
                         self.all_runs.append(exec)
 
     def save(self):
@@ -63,7 +64,7 @@ class SimulationRun:
 
 if __name__ == '__main__':
     sr = SimulationRun()
-    # sr.create()
-    # sr.save()
+    #sr.create()
+    #sr.save()
     sr.open_folder(sr.folder_path)
-    sr.compute(7)
+    sr.compute(1)

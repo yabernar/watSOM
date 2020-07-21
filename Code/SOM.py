@@ -122,6 +122,12 @@ class SOM:
     def get_neural_list(self):
         return np.reshape(self.neurons, (-1,) + self.data.shape[1:])
 
+    def get_neural_distances(self, old_winners, new_winners):
+        diff_winners = np.zeros(old_winners.shape)
+        for j in range(len(old_winners)):
+            diff_winners[j] = manhattan_distance(np.asarray(new_winners[j]), np.asarray(old_winners[j]))
+        return diff_winners
+
     def mean_error(self, winners=None):
         if winners is None:
             winners = self.get_all_winners()

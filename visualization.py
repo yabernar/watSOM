@@ -115,6 +115,8 @@ class Display(QtWidgets.QGroupBox):
         plot_types = {"input_video": MplCanvas.input_video,
                       "background": MplCanvas.background,
                       "groundtruth": MplCanvas.groundtruth,
+                      "som_results": MplCanvas.som_result,
+                      "gng_results": MplCanvas.gng_result,
                       "statistics": MplCanvas.statistics,
                       "statistics_gng": MplCanvas.statistics_gng}
         self.graphs = []
@@ -122,8 +124,8 @@ class Display(QtWidgets.QGroupBox):
         self.graphs.append(MplCanvas("statistics"))
         self.graphs.append(MplCanvas("statistics_gng"))
         self.graphs.append(MplCanvas("groundtruth"))
-        self.graphs.append(MplCanvas("groundtruth"))
-        self.graphs.append(MplCanvas("groundtruth"))
+        self.graphs.append(MplCanvas("som_results"))
+        self.graphs.append(MplCanvas("gng_results"))
 
         self.layout = QtWidgets.QGridLayout()
         self.layout.addWidget(self.graphs[0], 0, 0)
@@ -192,6 +194,24 @@ class MplCanvas(QtWidgets.QGroupBox):
     def statistics_gng(self):
         name = current_path.split(os.path.sep)[3::]
         return Image.open(os.path.join("Statistics", "cdnet_gng", name[0]+"_"+name[1]+".png"))
+
+    def som_result(self):
+        name = current_path.split(os.path.sep)[3::]
+        try:
+            img = Image.open(os.path.join("Results", "Visualizations", "SOM", name[0]+"_"+name[1]+"13n-21p-1", "results", name[0], name[1], "bin{0:06d}.png".format(current_image)))
+        except FileNotFoundError:
+            img = Image.open(os.path.join(current_path, "groundtruth", "gt{0:06}.png".format(current_image)))
+        return img
+
+    def gng_result(self):
+        name = current_path.split(os.path.sep)[3::]
+        try:
+            img = Image.open(os.path.join("Results", "Visualizations", "GNG", name[0]+"_"+name[1]+"13n-21p-1", "results", name[0], name[1], "bin{0:06d}.png".format(current_image)))
+        except FileNotFoundError:
+            img = Image.open(os.path.join(current_path, "groundtruth", "gt{0:06}.png".format(current_image)))
+        return img
+
+
 
 class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
