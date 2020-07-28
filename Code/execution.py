@@ -63,7 +63,11 @@ class Execution:
             self.data = MosaicImage(img, parameters)
             self.training_data = RandomImage(img, parameters)
         elif self.dataset["type"] == "tracking":
-            path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "bkg.jpg")
+            # path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "bkg.jpg")
+            if self.metadata["seed"] % 2 == 1:
+                path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "input", "bkg.jpg")
+            else:
+                path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "input", "bkg2.jpg")
             img = Image.open(path)
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
             self.data = MosaicImage(img, parameters)
@@ -71,7 +75,10 @@ class Execution:
             print("Error : No dataset type specified !")
 
     def run(self):
-        np.random.seed(self.metadata["seed"])
+        if self.metadata["seed"] % 2 == 1:
+            np.random.seed(self.metadata["seed"])
+        else:
+            np.random.seed(self.metadata["seed"]-1)
         if self.model["model"] == "gng":
             self.runGNG()
         else:
@@ -142,11 +149,11 @@ class Execution:
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
 
-            base = os.path.join("Results", "Visualizations", self.metadata["name"], "results")
+            base = os.path.join("Results", "Blurry", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
-            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]], "step": step, "cut": self.model["cut"]})
+            parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]], "step": step})
 
             trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi,
                                              parameters=parameters)

@@ -8,12 +8,12 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "Cut")
+        self.folder_path = os.path.join("Executions", "Blurry")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
 
-        exclusion_list = ["intermittentObjectMotion", "lowFramerate", "PTZ"]
+        exclusion_list = ["intermittentObjectMotion", "lowFramerate", "PTZ", "badWeather", "baseline", "cameraJitter", "nightVideos", "shadow", "thermal"]
 
         videos_files = []
         cdnet_path = os.path.join("Data", "tracking", "dataset")
@@ -26,13 +26,13 @@ class SimulationRun:
 
         for v in videos_files:
             for i in range(13, 14):
-                for j in range(13):
+                for j in range(10):
                     for k in range(21, 22):
                         exec = Execution()
-                        exec.metadata = {"name": v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": 1}
+                        exec.metadata = {"name": v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
                         exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
                         # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
-                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i, "cut": j}
+                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
                         self.all_runs.append(exec)
 
     def save(self):
@@ -64,7 +64,7 @@ class SimulationRun:
 
 if __name__ == '__main__':
     sr = SimulationRun()
-    #sr.create()
-    #sr.save()
+    # sr.create()
+    # sr.save()
     sr.open_folder(sr.folder_path)
-    sr.compute(1)
+    sr.compute(7)

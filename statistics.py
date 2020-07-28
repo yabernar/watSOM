@@ -10,8 +10,8 @@ from matplotlib import cm
 class Statistics:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "office_tracking")
-        self.results_path = os.path.join("Statistics", "cdnet_som")
+        self.folder_path = os.path.join("Executions", "Threshold")
+        self.results_path = os.path.join("Statistics", "Threshold")
 
     def open_folder(self, path):
         for file in os.listdir(path):
@@ -69,32 +69,83 @@ class Statistics:
 
         return fig
 
-    def graph(self):
-        x = []
-        y = []
-        z = []
+    def cdnet_graph(self):
+        os.makedirs(self.results_path, exist_ok=True)
+
+        exclusion_list = ["intermittentObjectMotion", "lowFramerate", "PTZ"]
+
+        videos_files = []
+        cdnet_path = os.path.join("Data", "tracking", "dataset")
+        categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
+        for cat in categories:
+            if cat not in exclusion_list:
+                elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
+                for elem in elements:
+                    videos_files.append(os.path.join(cat, elem))
+        for file in videos_files:
+            fig = self.graph(file)
+            plt.savefig(os.path.join(self.results_path, file.replace("/", "_").replace("\\", "_") + ".png"))
+
+    def graph(self, file=None):
+        x = range(26)
+        y = np.zeros(26)
+        w = np.zeros(26)
+        z = np.zeros(26)
         for e in self.all_runs:
-            x.append(e.metrics["Neurons"])
-            # y.append(e.metrics["fmeasure"])
-            z.append(e.metrics["fmeasure"])
-            # y.append(10 * np.log10(1 / e.metrics["Square_error"]))
-        zmin, zmax = min(z), max(z)
+            if file is None or file == e.dataset["file"]:
+                y[e.model["threshold"]] += e.metrics["fmeasure"]
+                w[e.model["threshold"]] += e.metrics["precision"]
+                z[e.model["threshold"]] += e.metrics["recall"]
+        zmin, zmax = 0, 1
+
 
         fig = plt.figure()
-        # ax = fig.gca(projection='3d')
 
         # ax.set_zlim(0.95 * zmin, 1.05 * zmax)
-        plt.xlabel("Nb Neurons")
-        plt.ylabel("fmeasure")
+        ax = fig.gca()
+        ax.set_xlabel("Threshold")
+        ax.set_ylabel("fmeasure")
         # plt.xlabel("Taille d'imagettes")
         # ax.invert_xaxis()
         # scatter = ax.scatter(x, y, z, cmap=cm.coolwarm)
-        plt.scatter(x, z)
 
-        plt.show()
+        scatter = ax.scatter(x, y, c="b")
+        scatter = ax.scatter(x, w, c="r")
+        scatter = ax.scatter(x, z, c="g")
+
+        return fig
+
+    def all_graph(self, file=None):
+        x = range(26)
+        y = np.zeros(26)
+        w = np.zeros(26)
+        z = np.zeros(26)
+        for e in self.all_runs:
+            if file is None or file == e.dataset["file"]:
+                y[e.model["threshold"]] += e.metrics["fmeasure"]
+                w[e.model["threshold"]] += e.metrics["precision"]
+                z[e.model["threshold"]] += e.metrics["recall"]
+        zmin, zmax = 0.35, 0.4
+
+        y = y / 39
+        w = w / 39
+        z = z / 39
 
 
-        plt.show()
+        fig = plt.figure()
+
+        ax = fig.gca()
+        ax.set_ylim(0.95 * zmin, 1.05 * zmax)
+        ax.set_xlabel("threshold")
+        ax.set_ylabel("fmeasure")
+        # plt.xlabel("Taille d'imagettes")
+        # ax.invert_xaxis()
+        # scatter = ax.scatter(x, y, z, cmap=cm.coolwarm)
+        scatter = ax.scatter(x, y, c="b")
+        scatter = ax.scatter(x, w, c="r")
+        scatter = ax.scatter(x, z, c="g")
+
+        return fig
 
     def variations_boxplot(self):
         ranges = list(range(1, 5)) + list(range(5, 101, 5))
@@ -126,10 +177,13 @@ class Statistics:
 
         plt.show()
 
+
 if __name__ == '__main__':
     sr = Statistics()
     sr.open_folder(sr.folder_path)
-    # sr.graph()
-    sr.surface_graph()
+    sr.cdnet_graph()
+    # sr.surface_graph()
     # sr.variations_boxplot()
-    plt.show()
+    # sr.all_graph()
+    # plt.show()
+
