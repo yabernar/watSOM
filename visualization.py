@@ -116,16 +116,19 @@ class Display(QtWidgets.QGroupBox):
                       "background": MplCanvas.background,
                       "groundtruth": MplCanvas.groundtruth,
                       "som_results": MplCanvas.som_result,
+                      "som_topo": MplCanvas.som_Topo,
+                      "som_vq": MplCanvas.som_VQ,
+                      "som_saliency": MplCanvas.som_Saliency,
                       "gng_results": MplCanvas.gng_result,
                       "statistics": MplCanvas.statistics,
                       "statistics_gng": MplCanvas.statistics_gng}
         self.graphs = []
         self.graphs.append(MplCanvas("input_video"))
-        self.graphs.append(MplCanvas("statistics"))
-        self.graphs.append(MplCanvas("statistics_gng"))
+        self.graphs.append(MplCanvas("som_vq"))
+        self.graphs.append(MplCanvas("som_topo"))
         self.graphs.append(MplCanvas("groundtruth"))
+        self.graphs.append(MplCanvas("som_saliency"))
         self.graphs.append(MplCanvas("som_results"))
-        self.graphs.append(MplCanvas("gng_results"))
 
         self.layout = QtWidgets.QGridLayout()
         self.layout.addWidget(self.graphs[0], 0, 0)
@@ -199,6 +202,30 @@ class MplCanvas(QtWidgets.QGroupBox):
         name = current_path.split(os.path.sep)[3::]
         try:
             img = Image.open(os.path.join("Results", "Visualizations", "SOM", name[0]+"_"+name[1]+"13n-21p-1", "results", name[0], name[1], "bin{0:06d}.png".format(current_image)))
+        except FileNotFoundError:
+            img = Image.open(os.path.join(current_path, "groundtruth", "gt{0:06}.png".format(current_image)))
+        return img
+
+    def som_VQ(self):
+        name = current_path.split(os.path.sep)[3::]
+        try:
+            img = Image.open(os.path.join("Results", "Visualizations", "SOM", name[0]+"_"+name[1]+"13n-21p-1", "results", "supplements", "difference", "dif{0:06d}.png".format(current_image)))
+        except FileNotFoundError:
+            img = Image.open(os.path.join(current_path, "groundtruth", "gt{0:06}.png".format(current_image)))
+        return img
+
+    def som_Topo(self):
+        name = current_path.split(os.path.sep)[3::]
+        try:
+            img = Image.open(os.path.join("Results", "Visualizations", "SOM", name[0]+"_"+name[1]+"13n-21p-1", "results", "supplements", "diff_winners", "win{0:06d}.png".format(current_image)))
+        except FileNotFoundError:
+            img = Image.open(os.path.join(current_path, "groundtruth", "gt{0:06}.png".format(current_image)))
+        return img
+
+    def som_Saliency(self):
+        name = current_path.split(os.path.sep)[3::]
+        try:
+            img = Image.open(os.path.join("Results", "Visualizations", "SOM", name[0]+"_"+name[1]+"13n-21p-1", "results", "supplements", "saliency", "sal{0:06d}.png".format(current_image)))
         except FileNotFoundError:
             img = Image.open(os.path.join(current_path, "groundtruth", "gt{0:06}.png".format(current_image)))
         return img

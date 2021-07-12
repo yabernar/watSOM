@@ -59,7 +59,6 @@ class SOM:
                     bmu = i
         return bmu
 
-
     def get_all_winners(self):
         winners_list = np.zeros(self.data.shape[0], dtype=tuple)  # list of BMU for each corresponding training vector
         for i in np.ndindex(winners_list.shape):
@@ -73,6 +72,14 @@ class SOM:
         for index in winners:
             r_data.append(self.neurons[index])
         return r_data
+
+    def get_difference(self, winners=None):
+        if winners is None:
+            winners = self.get_all_winners()
+        diff = []
+        for i in np.ndindex(winners.shape):
+            diff.append(self.data[i] - self.neurons[winners[i]])
+        return diff
 
     def run_iteration(self):
         if self.iteration >= self.max_iterations:
