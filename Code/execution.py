@@ -8,6 +8,7 @@ from PIL import Image
 from Code.FastSOM import FastSOM
 from Code.GNG import GrowingNeuralGas
 from Code.Parameters import Parameters, Variable
+from Code.Recursive_SOM import RecursiveSOM
 from Code.SOM import SOM
 from Code.cdnet_evaluation import Comparator
 from Code.tracking_metrics import TrackingMetrics
@@ -63,11 +64,11 @@ class Execution:
             self.data = MosaicImage(img, parameters)
             self.training_data = RandomImage(img, parameters)
         elif self.dataset["type"] == "tracking":
-            # path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "bkg.jpg")
-            if self.metadata["seed"] % 2 == 1:
-                path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "input", "bkg.jpg")
-            else:
-                path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "input", "bkg2.jpg")
+            path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "bkg.jpg")
+            #if self.metadata["seed"] % 2 == 1:
+            #    path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "input", "bkg.jpg")
+            #else:
+            #    path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "input", "bkg2.jpg")
             img = Image.open(path)
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
             self.data = MosaicImage(img, parameters)
@@ -75,10 +76,10 @@ class Execution:
             print("Error : No dataset type specified !")
 
     def run(self):
-        if self.metadata["seed"] % 2 == 1:
-            np.random.seed(self.metadata["seed"])
-        else:
-            np.random.seed(self.metadata["seed"]-1)
+        #if self.metadata["seed"] % 2 == 1:
+        np.random.seed(self.metadata["seed"])
+        #else:
+        #    np.random.seed(self.metadata["seed"]-1)
         if self.model["model"] == "gng":
             self.runGNG()
         else:
@@ -102,8 +103,12 @@ class Execution:
         if self.data is None:
             self.load_dataset()
         nb_epochs = self.model["nb_epochs"]
-        parameters = Parameters({"alpha": Variable(start=0.6, end=0.05, nb_steps=nb_epochs),
-                                 "sigma": Variable(start=0.5, end=0.001, nb_steps=nb_epochs),
+        if "alpha_start" not in self.model: self.model["alpha_start"] = 0.6
+        if "alpha_end" not in self.model: self.model["alpha_end"] = 0.05
+        if "sigma_start" not in self.model: self.model["sigma_start"] = 0.5
+        if "sigma_end" not in self.model: self.model["sigma_end"] = 0.001
+        parameters = Parameters({"alpha": Variable(start=self.model["alpha_start"], end=self.model["alpha_end"], nb_steps=nb_epochs),
+                                 "sigma": Variable(start=self.model["sigma_start"], end=self.model["sigma_end"], nb_steps=nb_epochs),
                                  "data": self.data.get_data(),
                                  "neurons_nbr": (self.model["width"], self.model["height"]),
                                  "epochs_nbr": nb_epochs})
@@ -111,6 +116,8 @@ class Execution:
             self.map = SOM(parameters)
         elif self.model["model"] == "fast":
             self.map = FastSOM(parameters)
+        elif self.model["model"] == "recursive":
+            self.map = RecursiveSOM(parameters)
         else:
             print("Error : Unknown model !")
 
@@ -119,9 +126,10 @@ class Execution:
         if "final" in self.codebooks:
             self.map.neurons = np.asarray(self.codebooks["final"])
         else:
-            for i in range(nb_epochs):
-                self.map.run_epoch()
-            self.codebooks["final"] = copy.deepcopy(self.map.neurons.tolist())
+            self.map.run()
+            #for i in range(nb_epochs):
+            #    self.map.run_epoch()
+            #self.codebooks["final"] = copy.deepcopy(self.map.neurons.tolist())
 
         # for i in range(nb_epochs):
         #     print("Epoch "+str(i+1))
@@ -149,7 +157,7 @@ class Execution:
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
 
-            base = os.path.join("Results", "Blurry", self.metadata["name"], "results")
+            base = os.path.join("Results", "NeuralDist", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
@@ -164,6 +172,38 @@ class Execution:
             self.metrics["fmeasure"] = fmeasure
             self.metrics["precision"] = precision
             self.metrics["recall"] = recall
+
+    def compute_varying_threshold_metric(self):
+        if self.dataset["type"] == "tracking":
+            current_path = os.path.join("Data", "tracking", "dataset", self.dataset["file"])
+            roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
+            temporal_roi = (int(roi_file[0]), int(roi_file[1]))
+
+            base = os.path.join("Results", "SOM_Executions", self.metadata["name"], "results")
+            output_path = os.path.join(base, self.dataset["file"])
+            supplements_path = os.path.join(base, "supplements")
+            difference_path = os.path.join(supplements_path, "saliency")
+
+            nb_img_gen = self.dataset["nb_images_evals"] if self.dataset["nb_images_evals"] is not None else 50
+            step = 1
+            if nb_img_gen > 0:
+                step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
+
+            ranges = list(range(1, 20)) + list(range(20, 101, 5))
+            for threshold in ranges:
+                for img in os.listdir(difference_path):
+                    som_difference = Image.open(os.path.join(difference_path, img))
+                    # Binarizing
+                    fn = lambda x: 255 if x > threshold else 0
+                    thresholded = som_difference.convert('L').point(fn, mode='1')
+                    result = Image.new("L", som_difference.size)
+                    result.paste(thresholded, (0, 0))
+                    result.save(os.path.join(output_path, "bin"+img[3:]))
+
+                cmp = Comparator()
+                fitness = cmp.evaluate__folder_c(current_path, output_path, step)
+                # print(fitness)
+                self.metrics["fmeasure-t" + str(threshold)] = fitness
 
     def compute_steps_metrics(self):
         # self.metrics["Square_error"] = self.som.square_error()
@@ -182,6 +222,7 @@ class Execution:
 
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
 
+
             # trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi, parameters=parameters)
             # trackingMetric.compute(self.som)
             ranges = list(range(1, 5)) + list(range(5, 101, 5))
@@ -192,7 +233,7 @@ class Execution:
                 self.metrics["fmeasure-s" + str(i)] = fitness
 
     def full_step_evaluation(self, path):
-        self.compute_steps_metrics()
+        self.compute_varying_threshold_metric()
         self.save(path)
         print("Simulation", self.metadata["name"], "ended")
 
@@ -200,8 +241,7 @@ class Execution:
         self.run()
         self.compute_metrics()
         self.save(path)
-        print("Simulation", self.metadata["name"], "ended")
-
+        # print("Simulation", self.metadata["name"], "ended")
 
 if __name__ == '__main__':
     exec = Execution()
@@ -211,7 +251,7 @@ if __name__ == '__main__':
     # exec.run()
     # exec.compute_metrics()
     # exec.save(os.path.join("Executions", "Test"))
-    # exec.open(os.path.join("Executions", "Test", "test.json"))
+    # ex ec.open(os.path.join("Executions", "Test", "test.json"))
     # exec.run()
 
     # exec = Execution()

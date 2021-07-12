@@ -30,6 +30,7 @@ class TrackingMetrics:
         self.image_parameters = Parameters({"pictures_dim": self.pictures_dim})
 
     def compute(self, som):
+        os.makedirs(os.path.join(self.supplements_path, "reconstructed"), exist_ok=True)
         os.makedirs(os.path.join(self.supplements_path, "difference"), exist_ok=True)
         os.makedirs(os.path.join(self.supplements_path, "diff_winners"), exist_ok=True)
         os.makedirs(os.path.join(self.supplements_path, "saliency"), exist_ok=True)
@@ -54,9 +55,11 @@ class TrackingMetrics:
         diff_winners = self.som.get_neural_distances(self.initial_map, winners)
         diff_winners -= self.cut
         diff_winners[diff_winners < 0] = 0
+        diff_winners[diff_winners > 0] = 1  # New try
         diff_winners = diff_winners.reshape(new_data.nb_pictures)
         diff_winners = np.kron(diff_winners, np.ones((self.pictures_dim[0], self.pictures_dim[1])))
         #             diff_winners *= 30  # Use this parameter ?
+
         diff_winners = ImageOps.autocontrast(Image.fromarray(diff_winners).convert('L'))
 
         reconstructed = Image.fromarray(new_data.reconstruct(self.som.get_reconstructed_data(winners)))
@@ -72,6 +75,7 @@ class TrackingMetrics:
         result.paste(thresholded, (0, 0))
         # Saving
         if save:
+            reconstructed.save(os.path.join(supplements_path, "reconstructed", "rec{0:06d}.png".format(image_nb)))
             som_difference.save(os.path.join(supplements_path, "difference", "dif{0:06d}.png".format(image_nb)))
             diff_winners.save(os.path.join(supplements_path, "diff_winners", "win{0:06d}.png".format(image_nb)))
             som_difference_modulated.save(os.path.join(supplements_path, "saliency", "sal{0:06d}.png".format(image_nb)))

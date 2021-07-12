@@ -74,6 +74,11 @@ def fast_ied(x, y, img_dims=img_dims):
     sum = np.sum(np.outer(a, a) * kernel)
     return sum
 
+# SSIM
+def structural_sim_distance(x, y):
+    a = x.reshape(img_dims)
+    b = y.reshape(img_dims)
+
 
 def gaussian(d, sigma):
     return np.exp(-((d / sigma) ** 2) / 2) / sigma
