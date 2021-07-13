@@ -43,9 +43,9 @@ class SimulationRun:
                     for k in range(20, 21):
                         exec = Execution()
                         exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
-                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
+                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 5, "width": k, "height": k}
                         # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
-                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i,
+                        exec.model = {"model": "standard", "nb_epochs": 2, "width": i, "height": i,
                                       "alpha_start": alpha_start, "alpha_end": alpha_end,
                                       "sigma_start": sigma_start, "sigma_end": sigma_end}
                         self.all_runs.append(exec)
@@ -73,6 +73,8 @@ class SimulationRun:
 
 def evaluate(args):
     global run_nb
+    if run_nb > 0:
+        save_optimisation()
     # pic_dim, neuron_nbr, epochs = args
     # params = Parameters({"pictures_dim": [int(pic_dim), int(pic_dim)], "neurons_nbr": (int(neuron_nbr), int(neuron_nbr)), "epochs_nbr": int(epochs)})
     alpha_start, alpha_end, sigma_start, sigma_end = args
@@ -95,20 +97,22 @@ def evaluate(args):
     print("Measured fitness : {}".format([fitness, 1-fitness]))
     return fitness
 
+def save_optimisation():
+    full_results = pd.DataFrame({'loss': [x['loss'] for x in tpe_trials.results[:len(tpe_trials.results)-1]] + [0],
+                                 'iteration': tpe_trials.idxs_vals[0]['alpha_start'],
+                                 'alpha_start': tpe_trials.idxs_vals[1]['alpha_start'],
+                                 'alpha_end': tpe_trials.idxs_vals[1]['alpha_end'],
+                                 'sigma_start': tpe_trials.idxs_vals[1]['sigma_start'],
+                                 'sigma_end': tpe_trials.idxs_vals[1]['sigma_end']})
+    full_results.to_csv(os.path.join("Statistics", "optimisation", "alpha_sigma_highway.csv"))
+
 
 if __name__ == '__main__':
     tpe_trials = Trials()
     # space_init = (hp.quniform('picture_dims', 5, 20, 1), hp.quniform('neurons_nbr', 8, 16, 1), hp.quniform('nb_epochs', 30, 100, 10))
     space_learning = (hp.uniform('alpha_start', 0, 1), hp.uniform('alpha_end', 0, 1), hp.uniform('sigma_start', 0, 1), hp.uniform('sigma_end', 0, 1))
     best = fmin(evaluate, space_learning, algo=tpe.suggest, trials=tpe_trials, max_evals=1000)
-
-    full_results = pd.DataFrame({'loss': [x['loss'] for x in tpe_trials.results],
-                                'iteration': tpe_trials.idxs_vals[0]['alpha_start'],
-                                'alpha_start': tpe_trials.idxs_vals[1]['alpha_start'],
-                                'alpha_end': tpe_trials.idxs_vals[1]['alpha_end'],
-                                'sigma_start': tpe_trials.idxs_vals[1]['sigma_start'],
-                                'sigma_end': tpe_trials.idxs_vals[1]['sigma_end']})
-    full_results.to_csv(os.path.join("Statistics", "optimisation", "alpha_sigma_highway.csv"))
+    save_optimisation()
 
     # full_results = pd.DataFrame({'loss': [x['loss'] for x in tpe_trials.results],
     #                              'iteration': tpe_trials.idxs_vals[0]['picture_dims'],
