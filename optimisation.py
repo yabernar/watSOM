@@ -43,9 +43,9 @@ class SimulationRun:
                     for k in range(20, 21):
                         exec = Execution()
                         exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
-                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 5, "width": k, "height": k}
+                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
                         # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
-                        exec.model = {"model": "standard", "nb_epochs": 2, "width": i, "height": i,
+                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i,
                                       "alpha_start": alpha_start, "alpha_end": alpha_end,
                                       "sigma_start": sigma_start, "sigma_end": sigma_end}
                         self.all_runs.append(exec)
