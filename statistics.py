@@ -9,13 +9,18 @@ from Code.execution import Execution
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
+import matplotlib
 import pandas as pd
 
+font = {'family' : 'normal',
+        'size'   : 24}
+
+matplotlib.rc('font', **font)
 
 class Statistics:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "Stats_finished")
+        self.folder_path = os.path.join("Executions", "NbImageEvals")
         self.results_path = os.path.join("Statistics", "Stats")
 
     def open_folder(self, path):
@@ -192,34 +197,54 @@ class Statistics:
 
 
     def variations_boxplot(self):
-        ranges = list(range(1, 20)) + list(range(20, 101, 5))
-        data = np.zeros((len(self.all_runs), len(ranges)))
-        j = 0
-        for e in self.all_runs:
-            for i in range(len(ranges)):
-                data[j, i] = e.metrics["fmeasure-t"+str(ranges[i])][0]
-            j += 1
+        ranges = range(5,201)
+        videos = ["highway", "pedestrians", "PETS", "office"]
+        lines = []
+        for v in videos:
+            lines.append(self.extract_data_from_video(video=v))
 
-        print(data)
+        legend = False
+        for l in lines:
+            if not legend:
+                plt.plot(l[0], linewidth=1, color='b', label="Séquence unique")  # mean curve.
+                legend = True
+            else:
+                plt.plot(l[0], linewidth=1, color='b')  # mean curve.
+            plt.fill_between(ranges, l[1], l[2], color='b', alpha=.1)  # std curves.
 
-        for i in range(len(self.all_runs)):
-            data[i, ::] -= data[i, 0]
+        overall = self.extract_data_from_video("baseline")
+        plt.plot(overall[0], linewidth=2, color='purple', label="Moyenne des séquences")  # mean curve.
+        #plt.fill_between(ranges, overall[1], overall[2], color='r', alpha=.1)  # std curves.
 
-        print(data)
-
-        fig = plt.figure()
-        # ax = fig.gca(projection='3d')
-
-        # ax.set_zlim(0.95 * zmin, 1.05 * zmax)
-        plt.xticks([], ranges)
-        plt.xlabel("Image generation step")
-        plt.ylabel("fmeasure")
-        # plt.xlabel("Taille d'imagettes")
-        # ax.invert_xaxis()
-        # scatter = ax.scatter(x, y, z, cmap=cm.coolwarm)
-        plt.boxplot(data)
+        plt.xlabel("Nombre d'images évaluées par séquence")
+        plt.ylabel("Différence de Fmeasure avec l'évaluation complète")
+        plt.hlines([0.005, -0.005, 0.01, -0.01], 0, 200, colors='g', linestyles='dashed')
+        plt.hlines([0], 0, 200, colors='g', linestyles='dotted')
+        plt.vlines([75], -0.03, 0.03, colors='red', linestyles='solid', linewidth=2, label="Valeur sélectionnée")
+        plt.ylim(-0.025,0.025)
+        plt.legend()
 
         plt.show()
+
+    def extract_data_from_video(self, video=""):
+        ranges = range(5,201)
+        data = []
+        for e in self.all_runs:
+            if video in e.dataset["file"]:
+                res = np.asarray(e.metrics["fmeasure-nbimgs"])
+                data.append(res[:, 0] - e.metrics["fmeasure"])
+
+        data = np.asarray(data)
+        smooth_path = data.mean(axis=0)
+        under_line = data.min(axis=0)
+        over_line = data.max(axis=0)
+
+        print(smooth_path)
+
+        path = np.zeros(201)
+        path[5:] = smooth_path
+        smooth_path = np.ma.masked_where(path == 0, path)
+        return smooth_path, under_line, over_line
 
     def array_display(self, file=None):
         se = []
@@ -263,8 +288,8 @@ if __name__ == '__main__':
     # sr.threshold_boxplot()
     # sr.cdnet_graph()
     # sr.surface_graph()
-    # sr.variations_boxplot()
+    sr.variations_boxplot()
     # sr.all_graph()
-    sr.array_display(file="baseline/PETS2006")
+    # sr.array_display(file="baseline/PETS2006")
     # plt.show()
 

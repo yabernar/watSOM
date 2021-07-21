@@ -107,6 +107,7 @@ class Execution:
         if "alpha_end" not in self.model: self.model["alpha_end"] = 0.05
         if "sigma_start" not in self.model: self.model["sigma_start"] = 0.5
         if "sigma_end" not in self.model: self.model["sigma_end"] = 0.001
+        if "nb_images_evals" not in self.dataset: self.dataset["nb_images_evals"] = 75
         parameters = Parameters({"alpha": Variable(start=self.model["alpha_start"], end=self.model["alpha_end"], nb_steps=nb_epochs),
                                  "sigma": Variable(start=self.model["sigma_start"], end=self.model["sigma_end"], nb_steps=nb_epochs),
                                  "data": self.data.get_data(),
@@ -152,12 +153,12 @@ class Execution:
             temporal_roi = (int(roi_file[0]), int(roi_file[1]))
             mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
 
-            nb_img_gen = self.dataset["nb_images_evals"] if self.dataset["nb_images_evals"] is not None else 50
+            nb_img_gen = self.dataset["nb_images_evals"]
             step = 1
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
 
-            base = os.path.join("Results", "NeuralDist", self.metadata["name"], "results")
+            base = os.path.join("Results", "NbImageEvals", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
@@ -184,7 +185,7 @@ class Execution:
             supplements_path = os.path.join(base, "supplements")
             difference_path = os.path.join(supplements_path, "saliency")
 
-            nb_img_gen = self.dataset["nb_images_evals"] if self.dataset["nb_images_evals"] is not None else 50
+            nb_img_gen = self.dataset["nb_images_evals"]
             step = 1
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
@@ -216,37 +217,46 @@ class Execution:
             temporal_roi = (int(roi_file[0]), int(roi_file[1]))
             mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
 
-            base = os.path.join("Results", "SOM_Executions", self.metadata["name"], "results")
+            base = os.path.join("Results", "NbImageEvals", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
             parameters = Parameters({"pictures_dim": [self.dataset["width"], self.dataset["height"]]})
 
+            # ranges = list(range(1, 5)) + list(range(5, 101, 5))
+            #res = []
+            #ranges = range(1,201)
+            #for i in ranges:
+            #    cmp = Comparator()
+            #    fitness = cmp.evaluate__folder_c(current_path, output_path, i)
+            #    res.append(fitness)
+            #self.metrics["fmeasure-steps"] = res
 
-            # trackingMetric = TrackingMetrics(input_path, output_path, supplements_path, temporal_roi, mask_roi, parameters=parameters)
-            # trackingMetric.compute(self.som)
-            ranges = list(range(1, 5)) + list(range(5, 101, 5))
-            for i in ranges:
+            res = []
+            nb_image_ranges = range(5,201)
+            for i in nb_image_ranges:
+                step = (temporal_roi[1] + 1 - temporal_roi[0]) // i
                 cmp = Comparator()
-                fitness = cmp.evaluate__folder_c(current_path, output_path, i)
-                # print(fitness)
-                self.metrics["fmeasure-s" + str(i)] = fitness
+                fitness = cmp.evaluate__folder_c(current_path, output_path, step)
+                res.append(fitness)
+            self.metrics["fmeasure-nbimgs"] = res
 
     def full_step_evaluation(self, path):
-        self.compute_varying_threshold_metric()
+        self.compute_steps_metrics()
         self.save(path)
         print("Simulation", self.metadata["name"], "ended")
 
     def full_simulation(self, path):
-        self.run()
-        self.compute_metrics()
-        self.save(path)
-        # print("Simulation", self.metadata["name"], "ended")
+        if "fmeasure" not in self.metrics:
+            self.run()
+            self.compute_metrics()
+            self.save(path)
+        print("Simulation", self.metadata["name"], "ended")
 
 if __name__ == '__main__':
     exec = Execution()
     # exec.metadata = {"name": "test", "seed": 1}
-    exec.dataset = {"type": "random_image", "file": "Lenna.png", "width": 10, "height": 10}
+    # exec.dataset = {"type": "random_image", "file": "Lenna.png", "width": 10, "height": 10}
     # exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
     # exec.run()
     # exec.compute_metrics()
@@ -256,7 +266,7 @@ if __name__ == '__main__':
 
     # exec = Execution()
     exec.metadata = {"name": "test", "seed": 1}
-    # exec.dataset = {"type": "tracking", "file": "highway", "width": 10, "height": 10}
+    exec.dataset = {"type": "tracking", "file": "baseline/highway", "width": 10, "height": 10}
     exec.model = {"model": "standard", "nb_epochs": 2, "width": 10, "height": 10}
     # exec.model = {"model": "gng", "nb_epochs": 20}
     exec.run()
