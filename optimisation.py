@@ -34,7 +34,7 @@ class SimulationRun:
                 for elem in elements:
                     videos_files.append(os.path.join(cat, elem))
 
-        videos_files = [videos_files[0]]
+        videos_files = [videos_files[2]]
         alpha_start, alpha_end, sigma_start, sigma_end = args
 
         for v in videos_files:
@@ -43,7 +43,7 @@ class SimulationRun:
                     for k in range(20, 21):
                         exec = Execution()
                         exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
-                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
+                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 75, "width": k, "height": k}
                         # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
                         exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i,
                                       "alpha_start": alpha_start, "alpha_end": alpha_end,
@@ -104,7 +104,7 @@ def save_optimisation():
                                  'alpha_end': tpe_trials.idxs_vals[1]['alpha_end'],
                                  'sigma_start': tpe_trials.idxs_vals[1]['sigma_start'],
                                  'sigma_end': tpe_trials.idxs_vals[1]['sigma_end']})
-    full_results.to_csv(os.path.join("Statistics", "optimisation", "alpha_sigma_highway.csv"))
+    full_results.to_csv(os.path.join("Statistics", "optimisation", "alpha_sigma_pedestrians.csv"))
 
 
 if __name__ == '__main__':
