@@ -220,7 +220,7 @@ class Statistics:
         plt.ylabel("Différence de Fmeasure avec l'évaluation complète")
         plt.hlines([0.005, -0.005, 0.01, -0.01], 0, 200, colors='g', linestyles='dashed')
         plt.hlines([0], 0, 200, colors='g', linestyles='dotted')
-        plt.vlines([75], -0.03, 0.03, colors='red', linestyles='solid', linewidth=2, label="Valeur sélectionnée")
+        plt.vlines([105], -0.03, 0.03, colors='red', linestyles='solid', linewidth=2, label="Valeur sélectionnée")
         plt.ylim(-0.025,0.025)
         plt.legend()
 

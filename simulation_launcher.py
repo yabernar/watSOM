@@ -8,7 +8,7 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "Stats")
+        self.folder_path = os.path.join("Executions", "EpochsNbr")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
@@ -24,18 +24,19 @@ class SimulationRun:
                 for elem in elements:
                     videos_files.append(os.path.join(cat, elem))
 
-        videos_files = videos_files[1:]
+        #videos_files = [videos_files[0]]
 
         for v in videos_files:
             for i in range(18, 19):
-                for j in range(20, 50):
+                for j in range(0, 8):
                     for k in range(20, 21):
-                        exec = Execution()
-                        exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
-                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 50, "width": k, "height": k}
-                        # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
-                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
-                        self.all_runs.append(exec)
+                        for n in range(5,201, 5):
+                            exec = Execution()
+                            exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
+                            exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 105, "width": k, "height": k}
+                            # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
+                            exec.model = {"model": "standard", "nb_epochs": n, "width": i, "height": i}
+                            self.all_runs.append(exec)
 
     def save(self):
         for e in self.all_runs:
@@ -69,5 +70,5 @@ if __name__ == '__main__':
     #sr.create()
     #sr.save()
     sr.open_folder(sr.folder_path)
-    sr.compute(8)
-    #sr.evaluate(8)
+    #sr.compute(8)
+    sr.evaluate(8)
