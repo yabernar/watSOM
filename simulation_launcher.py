@@ -32,7 +32,7 @@ class SimulationRun:
                     for k in range(20, 21):
                         for n in range(5,201, 5):
                             exec = Execution()
-                            exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
+                            exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"e"+str(n)+"p-"+str(j+1), "seed": j+1}
                             exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 105, "width": k, "height": k}
                             # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
                             exec.model = {"model": "standard", "nb_epochs": n, "width": i, "height": i}
@@ -67,8 +67,8 @@ class SimulationRun:
 
 if __name__ == '__main__':
     sr = SimulationRun()
-    #sr.create()
-    #sr.save()
-    sr.open_folder(sr.folder_path)
+    sr.create()
+    sr.save()
+    #sr.open_folder(sr.folder_path)
     #sr.compute(8)
-    sr.evaluate(8)
+    #sr.evaluate(8)
