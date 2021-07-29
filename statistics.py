@@ -20,7 +20,7 @@ matplotlib.rc('font', **font)
 class Statistics:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "NbImageEvals")
+        self.folder_path = os.path.join("Executions", "EpochsNbr")
         self.results_path = os.path.join("Statistics", "Stats")
 
     def open_folder(self, path):
@@ -195,8 +195,7 @@ class Statistics:
 
         boxplot = df.boxplot(column=['fmeasure'], by=['Threshold', 'model'])
 
-
-    def variations_boxplot(self):
+    def nb_images_per_sequence_plot(self):
         ranges = range(5,201)
         videos = ["highway", "pedestrians", "PETS", "office"]
         lines = []
@@ -246,6 +245,54 @@ class Statistics:
         smooth_path = np.ma.masked_where(path == 0, path)
         return smooth_path, under_line, over_line
 
+    def nb_epochs_plot(self):
+        ranges = range(5,201, 5)
+        videos = ["highway", "pedestrians", "PETS", "office"]
+        lines = []
+        for v in videos:
+            lines.append(self.extract_data_from_video_epoch(video=v))
+
+        legend = False
+        for l in lines:
+            if not legend:
+                plt.plot(l[0], linewidth=1, color='b', label="Séquence unique")  # mean curve.
+                legend = True
+            else:
+                plt.plot(l[0], linewidth=1, color='b')  # mean curve.
+            plt.fill_between(ranges, l[1], l[2], color='b', alpha=.1)  # std curves.
+
+        #overall = self.extract_data_from_video_epoch("baseline")
+        #plt.plot(overall[0], linewidth=2, color='purple', label="Moyenne des séquences")  # mean curve.
+        #plt.fill_between(ranges, overall[1], overall[2], color='r', alpha=.1)  # std curves.
+
+        plt.xlabel("Nombre d'images évaluées par séquence")
+        plt.ylabel("Différence de Fmeasure avec l'évaluation complète")
+        #plt.hlines([0.005, -0.005, 0.01, -0.01], 0, 200, colors='g', linestyles='dashed')
+        #plt.hlines([0], 0, 200, colors='g', linestyles='dotted')
+        #plt.vlines([105], -0.03, 0.03, colors='red', linestyles='solid', linewidth=2, label="Valeur sélectionnée")
+        #plt.ylim(-0.025,0.025)
+        plt.legend()
+
+        plt.show()
+
+    def extract_data_from_video_epoch(self, video=""):
+        ranges = range(5, 201, 5)
+        data = np.zeros((len(ranges), 8))
+        for e in self.all_runs:
+            if video in e.dataset["file"]:
+                data[e.model["nb_epochs"]//5-1, e.metadata["seed"]-1] = e.metrics["fmeasure"]
+
+        smooth_path = data.mean(axis=1)
+        under_line = data.min(axis=1)
+        over_line = data.max(axis=1)
+
+        print(smooth_path)
+
+        #path = np.zeros(201)
+        #path[5:] = smooth_path
+        #smooth_path = np.ma.masked_where(path == 0, path)
+        return smooth_path, under_line, over_line
+
     def array_display(self, file=None):
         se = []
         fm = []
@@ -288,7 +335,8 @@ if __name__ == '__main__':
     # sr.threshold_boxplot()
     # sr.cdnet_graph()
     # sr.surface_graph()
-    sr.variations_boxplot()
+    #sr.variations_boxplot()
+    sr.nb_epochs_plot()
     # sr.all_graph()
     # sr.array_display(file="baseline/PETS2006")
     # plt.show()
