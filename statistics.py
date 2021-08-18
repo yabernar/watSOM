@@ -248,7 +248,8 @@ class Statistics:
         return smooth_path, under_line, over_line
 
     def nb_epochs_plot(self):
-        ranges = range(5,201, 5)
+        ranges = chain(range(5, 201, 5), range(7, 201, 5))
+        x = sorted(list(ranges))
         videos = ["highway", "pedestrians", "PETS", "office"]
         lines = []
         for v in videos:
@@ -257,15 +258,21 @@ class Statistics:
         legend = False
         for l in lines:
             if not legend:
-                plt.plot(list(ranges), l[0], linewidth=1, color='b', label="Séquence unique")  # mean curve.
+                plt.plot(x, l[0], linewidth=1, color='b', label="Séquence unique")  # mean curve.
                 legend = True
             else:
-                plt.plot(list(ranges), l[0], linewidth=1, color='b')  # mean curve.
-            plt.fill_between(ranges, l[1], l[2], color='b', alpha=.1)  # std curves.
+                plt.plot(x, l[0], linewidth=1, color='b')  # mean curve.
+            plt.fill_between(x, l[1], l[2], color='b', alpha=.1)  # std curves.
 
         overall = self.extract_data_from_video_epoch("baseline")
-        plt.plot(list(ranges), overall[0], linewidth=2, color='purple', label="Moyenne des séquences")  # mean curve.
-        #plt.fill_between(ranges, overall[1], overall[2], color='r', alpha=.1)  # std curves.
+        plt.plot(x, overall[0], linewidth=2, color='purple', label="Moyenne des séquences")  # mean curve.
+
+        cleaned = self.extract_data_from_video_epoch("baseline", "PETS")
+        plt.plot(x, cleaned[0], linewidth=2, color='green', label="Moyenne des séquences croissantes")  # mean curve.
+        plt.hlines([max(cleaned[0]), min(cleaned[0][40:])], 0, 200, colors='g', linestyles='dotted')
+
+        print(max(cleaned[0]))
+
 
         plt.xlabel("Nombre d'images évaluées par séquence")
         plt.ylabel("Différence de Fmeasure avec l'évaluation complète")
@@ -277,14 +284,17 @@ class Statistics:
 
         plt.show()
 
-    def extract_data_from_video_epoch(self, video=""):
-        ranges = range(5, 201, 5)
+    def extract_data_from_video_epoch(self, video="", exclusion="None"):
+        ranges = chain(range(5, 201, 5), range(7,201,5))
         data = []
         for i in ranges:
             data.append([])
         for e in self.all_runs:
-            if video in e.dataset["file"]:
-                data[e.model["nb_epochs"]//5-1].append(e.metrics["fmeasure"])
+            if video in e.dataset["file"] and exclusion not in e.dataset["file"]:
+                if e.model["nb_epochs"] % 5 == 0:
+                    data[(e.model["nb_epochs"]//5-1)*2].append(e.metrics["fmeasure"])
+                else:
+                    data[((e.model["nb_epochs"]-2)//5-1)*2+1].append(e.metrics["fmeasure"])
 
         data = np.asarray(data)
         smooth_path = data.mean(axis=1)

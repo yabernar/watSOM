@@ -1,5 +1,5 @@
 import codecs
-import copy
+#import copy
 import os
 import json
 import numpy as np

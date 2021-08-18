@@ -2,6 +2,7 @@ import itertools
 import multiprocessing as mp
 import numpy as np
 import os
+
 from Code.execution import Execution
 
 
@@ -30,7 +31,7 @@ class SimulationRun:
             for i in range(18, 19):
                 for j in range(0, 4):
                     for k in range(20, 21):
-                        for n in range(5,201, 5):
+                        for n in range(7,201, 5):
                             exec = Execution()
                             exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"e"+str(n)+"p-"+str(j+1), "seed": j+1}
                             exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 105, "width": k, "height": k}
