@@ -8,7 +8,7 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "EpochsNbr")
+        self.folder_path = os.path.join("Executions", "EpochsNbr2")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
@@ -28,7 +28,7 @@ class SimulationRun:
 
         for v in videos_files:
             for i in range(18, 19):
-                for j in range(0, 8):
+                for j in range(0, 4):
                     for k in range(20, 21):
                         for n in range(5,201, 5):
                             exec = Execution()
@@ -67,8 +67,8 @@ class SimulationRun:
 
 if __name__ == '__main__':
     sr = SimulationRun()
-    sr.create()
-    sr.save()
-    #sr.open_folder(sr.folder_path)
-    #sr.compute(8)
+    #sr.create()
+    #sr.save()
+    sr.open_folder(sr.folder_path)
+    sr.compute(16)
     #sr.evaluate(8)

@@ -103,10 +103,10 @@ class Execution:
         if self.data is None:
             self.load_dataset()
         nb_epochs = self.model["nb_epochs"]
-        if "alpha_start" not in self.model: self.model["alpha_start"] = 0.6
+        if "alpha_start" not in self.model: self.model["alpha_start"] = 0.2
         if "alpha_end" not in self.model: self.model["alpha_end"] = 0.05
-        if "sigma_start" not in self.model: self.model["sigma_start"] = 0.5
-        if "sigma_end" not in self.model: self.model["sigma_end"] = 0.001
+        if "sigma_start" not in self.model: self.model["sigma_start"] = 0.7
+        if "sigma_end" not in self.model: self.model["sigma_end"] = 0.015
         if "nb_images_evals" not in self.dataset: self.dataset["nb_images_evals"] = 75
         parameters = Parameters({"alpha": Variable(start=self.model["alpha_start"], end=self.model["alpha_end"], nb_steps=nb_epochs),
                                  "sigma": Variable(start=self.model["sigma_start"], end=self.model["sigma_end"], nb_steps=nb_epochs),
@@ -158,7 +158,7 @@ class Execution:
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
 
-            base = os.path.join("Results", "EpochsNbr", self.metadata["name"], "results")
+            base = os.path.join("Results", "EpochsNbr2", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
