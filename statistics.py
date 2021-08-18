@@ -3,6 +3,8 @@ import multiprocessing as mp
 import numpy as np
 import os
 
+from itertools import chain
+
 from scipy.stats import stats
 
 from Code.execution import Execution
@@ -20,7 +22,7 @@ matplotlib.rc('font', **font)
 class Statistics:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "EpochsNbr")
+        self.folder_path = os.path.join("Executions", "EpochsNbr2")
         self.results_path = os.path.join("Statistics", "Stats")
 
     def open_folder(self, path):
@@ -255,14 +257,14 @@ class Statistics:
         legend = False
         for l in lines:
             if not legend:
-                plt.plot(l[0], linewidth=1, color='b', label="Séquence unique")  # mean curve.
+                plt.plot(list(ranges), l[0], linewidth=1, color='b', label="Séquence unique")  # mean curve.
                 legend = True
             else:
-                plt.plot(l[0], linewidth=1, color='b')  # mean curve.
+                plt.plot(list(ranges), l[0], linewidth=1, color='b')  # mean curve.
             plt.fill_between(ranges, l[1], l[2], color='b', alpha=.1)  # std curves.
 
-        #overall = self.extract_data_from_video_epoch("baseline")
-        #plt.plot(overall[0], linewidth=2, color='purple', label="Moyenne des séquences")  # mean curve.
+        overall = self.extract_data_from_video_epoch("baseline")
+        plt.plot(list(ranges), overall[0], linewidth=2, color='purple', label="Moyenne des séquences")  # mean curve.
         #plt.fill_between(ranges, overall[1], overall[2], color='r', alpha=.1)  # std curves.
 
         plt.xlabel("Nombre d'images évaluées par séquence")
@@ -277,19 +279,22 @@ class Statistics:
 
     def extract_data_from_video_epoch(self, video=""):
         ranges = range(5, 201, 5)
-        data = np.zeros((len(ranges), 8))
+        data = []
+        for i in ranges:
+            data.append([])
         for e in self.all_runs:
             if video in e.dataset["file"]:
-                data[e.model["nb_epochs"]//5-1, e.metadata["seed"]-1] = e.metrics["fmeasure"]
+                data[e.model["nb_epochs"]//5-1].append(e.metrics["fmeasure"])
 
+        data = np.asarray(data)
         smooth_path = data.mean(axis=1)
         under_line = data.min(axis=1)
         over_line = data.max(axis=1)
 
-        print(smooth_path)
+        #print(smooth_path)
 
         #path = np.zeros(201)
-        #path[5:] = smooth_path
+        #path = smooth_path
         #smooth_path = np.ma.masked_where(path == 0, path)
         return smooth_path, under_line, over_line
 
