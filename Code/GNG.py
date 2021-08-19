@@ -168,8 +168,8 @@ class GrowingNeuralGas:
             r_data.append(self.network.nodes[u]['vector'])
         return r_data
 
-    def get_neural_distances(self, old_winners):
-        winners = self.get_all_winners()
+    def get_neural_distances(self, old_winners, new_winners):
+        winners = new_winners
         distances = np.zeros(winners.shape)
         longest_path = 0
         N = list(self.network.nodes())

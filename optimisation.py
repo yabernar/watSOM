@@ -16,7 +16,7 @@ run_nb = 0
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "ABoptimisation")
+        self.folder_path = os.path.join("Executions", "GNGoptimisation")
 
     def create(self, args):
         global run_nb
@@ -35,7 +35,9 @@ class SimulationRun:
                     videos_files.append(os.path.join(cat, elem))
 
         # videos_files = [videos_files[2]]
-        alpha_start, alpha_end, sigma_start, sigma_end = args
+        #alpha_start, alpha_end, sigma_start, sigma_end = args
+
+        epsilon_winner, epsilon_neighbour, maximum_age, error_decrease_new_unit, error_decrease_global, epochs_nbr = args
 
         for v in videos_files:
             for i in range(18, 19):
@@ -45,9 +47,10 @@ class SimulationRun:
                         exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
                         exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 105, "width": k, "height": k}
                         # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
-                        exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i,
-                                      "alpha_start": alpha_start, "alpha_end": alpha_end,
-                                      "sigma_start": sigma_start, "sigma_end": sigma_end}
+                        exec.model = {"model": "gng", "nb_epochs": int(epochs_nbr), "nb_neurons": i**2,
+                                      "epsilon_winner": epsilon_winner, "epsilon_neighbour": epsilon_neighbour,
+                                      "maximum_age": int(maximum_age), "error_decrease_new_unit": error_decrease_new_unit,
+                                      "error_decrease_global": error_decrease_global}
                         self.all_runs.append(exec)
 
     def save(self):
@@ -77,13 +80,19 @@ def evaluate(args):
         save_optimisation()
     # pic_dim, neuron_nbr, epochs = args
     # params = Parameters({"pictures_dim": [int(pic_dim), int(pic_dim)], "neurons_nbr": (int(neuron_nbr), int(neuron_nbr)), "epochs_nbr": int(epochs)})
-    alpha_start, alpha_end = args
-    sigma_start, sigma_end = (0.7, 0.015)
-    params = Parameters({"alpha_start": alpha_start, "alpha_end": alpha_end, "sigma_start": sigma_start, "sigma_end": sigma_end})
+    #alpha_start, alpha_end = args
+    #sigma_start, sigma_end = (0.7, 0.015)
+    #params = Parameters({"alpha_start": alpha_start, "alpha_end": alpha_end, "sigma_start": sigma_start, "sigma_end": sigma_end})
+
+    epsilon_winner, epsilon_neighbour, maximum_age, error_decrease_new_unit, error_decrease_global, epochs_nbr = args
+    params = Parameters({"epsilon_winner": epsilon_winner, "epsilon_neighbour": epsilon_neighbour, "maximum_age": maximum_age,
+                         "error_decrease_new_unit": error_decrease_new_unit, "error_decrease_global": error_decrease_global,
+                         "epochs_nbr": epochs_nbr})
+
     print("Tested params : {}".format(params.data))
 
     sr = SimulationRun()
-    sr.create((alpha_start, alpha_end, sigma_start, sigma_end))
+    sr.create(args)
     sr.compute(8)
     sr.all_runs = []
     sr.open_folder(sr.current_path)
@@ -100,19 +109,23 @@ def evaluate(args):
 
 def save_optimisation():
     full_results = pd.DataFrame({'loss': [x['loss'] for x in tpe_trials.results[:len(tpe_trials.results)-1]] + [0],
-                                 'iteration': tpe_trials.idxs_vals[0]['alpha_start'],
-                                 'alpha_start': tpe_trials.idxs_vals[1]['alpha_start'],
-                                 'alpha_end': tpe_trials.idxs_vals[1]['alpha_end']})
-                                 #'sigma_start': tpe_trials.idxs_vals[1]['sigma_start'],
-                                 #'sigma_end': tpe_trials.idxs_vals[1]['sigma_end']})
-    full_results.to_csv(os.path.join("Statistics", "optimisation", "alpha_full.csv"))
+                                 'iteration': tpe_trials.idxs_vals[0]['epsilon_winner'],
+                                 'epsilon_winner': tpe_trials.idxs_vals[1]['epsilon_winner'],
+                                 'epsilon_neighbour': tpe_trials.idxs_vals[1]['epsilon_neighbour'],
+                                 'maximum_age': tpe_trials.idxs_vals[1]['maximum_age'],
+                                 'error_decrease_new_unit': tpe_trials.idxs_vals[1]['error_decrease_new_unit'],
+                                 'error_decrease_global': tpe_trials.idxs_vals[1]['error_decrease_global'],
+                                 'epochs_nbr': tpe_trials.idxs_vals[1]['epochs_nbr']})
+    full_results.to_csv(os.path.join("Statistics", "optimisation", "gng_full.csv"))
 
 
 if __name__ == '__main__':
     tpe_trials = Trials()
     # space_init = (hp.quniform('picture_dims', 5, 20, 1), hp.quniform('neurons_nbr', 8, 16, 1), hp.quniform('nb_epochs', 30, 100, 10))
     #space_learning = (hp.uniform('alpha_start', 0, 1), hp.uniform('alpha_end', 0, 1), hp.uniform('sigma_start', 0, 1), hp.uniform('sigma_end', 0, 1))
-    space_learning = (hp.uniform('alpha_start', 0, 1), hp.uniform('alpha_end', 0, 1))
+    # space_learning = (hp.uniform('alpha_start', 0, 1), hp.uniform('alpha_end', 0, 1))
+    space_learning = (hp.uniform('epsilon_winner', 0, 1), hp.uniform('epsilon_neighbour', 0, 1), hp.quniform('maximum_age', 1, 100, 1),
+                      hp.uniform('error_decrease_new_unit', 0, 1), hp.uniform('error_decrease_global', 0, 1), hp.quniform('epochs_nbr', 10, 200, 5))
     best = fmin(evaluate, space_learning, algo=tpe.suggest, trials=tpe_trials, max_evals=1000)
     save_optimisation()
 
