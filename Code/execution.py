@@ -64,7 +64,7 @@ class Execution:
             self.data = MosaicImage(img, parameters)
             self.training_data = RandomImage(img, parameters)
         elif self.dataset["type"] == "tracking":
-            path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "bkg.jpg")
+            path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "back.jpg")
             #if self.metadata["seed"] % 2 == 1:
             #    path = os.path.join("Data", "tracking", "dataset", self.dataset["file"], "input", "bkg.jpg")
             #else:
@@ -158,7 +158,7 @@ class Execution:
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
 
-            base = os.path.join("Results", "EpochsNbr2", self.metadata["name"], "results")
+            base = os.path.join("Results", "Sizing", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
