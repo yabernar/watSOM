@@ -16,7 +16,7 @@ run_nb = 0
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "Optimisation")
+        self.folder_path = os.path.join("Executions", "ABoptimisation")
 
     def create(self, args):
         global run_nb
@@ -34,16 +34,16 @@ class SimulationRun:
                 for elem in elements:
                     videos_files.append(os.path.join(cat, elem))
 
-        videos_files = [videos_files[2]]
+        # videos_files = [videos_files[2]]
         alpha_start, alpha_end, sigma_start, sigma_end = args
 
         for v in videos_files:
             for i in range(18, 19):
-                for j in range(0, 8):
+                for j in range(0, 2):
                     for k in range(20, 21):
                         exec = Execution()
                         exec.metadata = {"name": ""+v.replace("/", "_").replace("\\", "_")+str(i)+"n-"+str(k)+"p-"+str(j+1), "seed": j+1}
-                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 75, "width": k, "height": k}
+                        exec.dataset = {"type": "tracking", "file": v, "nb_images_evals": 105, "width": k, "height": k}
                         # exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i}
                         exec.model = {"model": "standard", "nb_epochs": 100, "width": i, "height": i,
                                       "alpha_start": alpha_start, "alpha_end": alpha_end,
@@ -77,12 +77,13 @@ def evaluate(args):
         save_optimisation()
     # pic_dim, neuron_nbr, epochs = args
     # params = Parameters({"pictures_dim": [int(pic_dim), int(pic_dim)], "neurons_nbr": (int(neuron_nbr), int(neuron_nbr)), "epochs_nbr": int(epochs)})
-    alpha_start, alpha_end, sigma_start, sigma_end = args
+    alpha_start, alpha_end = args
+    sigma_start, sigma_end = (0.7, 0.015)
     params = Parameters({"alpha_start": alpha_start, "alpha_end": alpha_end, "sigma_start": sigma_start, "sigma_end": sigma_end})
     print("Tested params : {}".format(params.data))
 
     sr = SimulationRun()
-    sr.create(args)
+    sr.create((alpha_start, alpha_end, sigma_start, sigma_end))
     sr.compute(8)
     sr.all_runs = []
     sr.open_folder(sr.current_path)
@@ -101,16 +102,17 @@ def save_optimisation():
     full_results = pd.DataFrame({'loss': [x['loss'] for x in tpe_trials.results[:len(tpe_trials.results)-1]] + [0],
                                  'iteration': tpe_trials.idxs_vals[0]['alpha_start'],
                                  'alpha_start': tpe_trials.idxs_vals[1]['alpha_start'],
-                                 'alpha_end': tpe_trials.idxs_vals[1]['alpha_end'],
-                                 'sigma_start': tpe_trials.idxs_vals[1]['sigma_start'],
-                                 'sigma_end': tpe_trials.idxs_vals[1]['sigma_end']})
-    full_results.to_csv(os.path.join("Statistics", "optimisation", "alpha_sigma_pedestrians.csv"))
+                                 'alpha_end': tpe_trials.idxs_vals[1]['alpha_end']})
+                                 #'sigma_start': tpe_trials.idxs_vals[1]['sigma_start'],
+                                 #'sigma_end': tpe_trials.idxs_vals[1]['sigma_end']})
+    full_results.to_csv(os.path.join("Statistics", "optimisation", "alpha_full.csv"))
 
 
 if __name__ == '__main__':
     tpe_trials = Trials()
     # space_init = (hp.quniform('picture_dims', 5, 20, 1), hp.quniform('neurons_nbr', 8, 16, 1), hp.quniform('nb_epochs', 30, 100, 10))
-    space_learning = (hp.uniform('alpha_start', 0, 1), hp.uniform('alpha_end', 0, 1), hp.uniform('sigma_start', 0, 1), hp.uniform('sigma_end', 0, 1))
+    #space_learning = (hp.uniform('alpha_start', 0, 1), hp.uniform('alpha_end', 0, 1), hp.uniform('sigma_start', 0, 1), hp.uniform('sigma_end', 0, 1))
+    space_learning = (hp.uniform('alpha_start', 0, 1), hp.uniform('alpha_end', 0, 1))
     best = fmin(evaluate, space_learning, algo=tpe.suggest, trials=tpe_trials, max_evals=1000)
     save_optimisation()
 

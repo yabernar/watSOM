@@ -158,7 +158,7 @@ class Execution:
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
 
-            base = os.path.join("Results", "NbImageEvals", self.metadata["name"], "results")
+            base = os.path.join("Results", "ABoptimisation", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
@@ -217,7 +217,7 @@ class Execution:
             temporal_roi = (int(roi_file[0]), int(roi_file[1]))
             mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
 
-            base = os.path.join("Results", "NbImageEvals", self.metadata["name"], "results")
+            base = os.path.join("Results", "ABoptimisation", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
@@ -251,7 +251,7 @@ class Execution:
             self.run()
             self.compute_metrics()
             self.save(path)
-        print("Simulation", self.metadata["name"], "ended")
+        #print("Simulation", self.metadata["name"], "ended")
 
 if __name__ == '__main__':
     exec = Execution()
