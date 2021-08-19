@@ -21,7 +21,7 @@ def generate_background(folder_path, nb_images):
     # ls | head -100 > tmp.txt; convert @tmp.txt -type TrueColor -evaluate-sequence median bkg.jpg; rm tmp.txt
 
 if __name__ == '__main__':
-    CDNET_path = "/users/yabernar/GrosDisque/CDNET14/dataset"
-    generate_background(os.path.join(CDNET_path, "nightVideos", "fluidHighway", "input"), 100)
+    CDNET_path = "/home/yabernar/watSOM/Data/tracking/dataset/"
+    generate_background(os.path.join(CDNET_path, "baseline", "pedestrians", "input"), 100)
 
 

@@ -7,7 +7,6 @@ import numpy as np
 from PIL import Image
 from scipy import spatial
 import networkx as nx
-import matplotlib.pyplot as plt
 
 from Code.Parameters import Parameters, Variable
 from Data.Mosaic_Image import MosaicImage
