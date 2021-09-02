@@ -34,7 +34,7 @@ class TrackingMetrics:
         os.makedirs(os.path.join(self.supplements_path, "difference"), exist_ok=True)
         os.makedirs(os.path.join(self.supplements_path, "diff_winners"), exist_ok=True)
         os.makedirs(os.path.join(self.supplements_path, "saliency"), exist_ok=True)
-        os.makedirs(os.path.join(self.supplements_path, "thresholded"), exist_ok=True)
+        #os.makedirs(os.path.join(self.supplements_path, "thresholded"), exist_ok=True)
         os.makedirs(os.path.join(self.output_path), exist_ok=True)
         self.som = som
         self.initial_map = self.som.get_all_winners()
@@ -79,6 +79,6 @@ class TrackingMetrics:
             som_difference.save(os.path.join(supplements_path, "difference", "dif{0:06d}.png".format(image_nb)))
             diff_winners.save(os.path.join(supplements_path, "diff_winners", "win{0:06d}.png".format(image_nb)))
             som_difference_modulated.save(os.path.join(supplements_path, "saliency", "sal{0:06d}.png".format(image_nb)))
-            thresholded.save(os.path.join(supplements_path, "thresholded", "thr{0:06d}.png".format(image_nb)))
+            #thresholded.save(os.path.join(supplements_path, "thresholded", "thr{0:06d}.png".format(image_nb)))
 
             result.save(os.path.join(output_path, "bin{0:06d}.png".format(image_nb)))

@@ -9,7 +9,7 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "Sizing")
+        self.folder_path = os.path.join("Executions", "sizing_to_finish")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
