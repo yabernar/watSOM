@@ -88,11 +88,11 @@ class Execution:
     def runGNG(self):
         if self.data is None:
             self.load_dataset()
-        inputs = Parameters({"epsilon_winner": 0.1,
-                             "epsilon_neighbour": 0.006,
-                             "maximum_age": 10,
-                             "error_decrease_new_unit": 0.5,
-                             "error_decrease_global": 0.995,
+        inputs = Parameters({"epsilon_winner": self.model["epsilon_winner"], # 0.1,
+                             "epsilon_neighbour": self.model["epsilon_neighbour"], # 0.006,
+                             "maximum_age": self.model["maximum_age"], # 10,
+                             "error_decrease_new_unit": self.model["error_decrease_new_unit"], # 0.5,
+                             "error_decrease_global": self.model["error_decrease_global"], # 0.995,
                              "data": self.data.get_data(),
                              "neurons_nbr": self.model["nb_neurons"],
                              "epochs_nbr": self.model["nb_epochs"]})
@@ -144,8 +144,9 @@ class Execution:
 
     def compute_metrics(self):
         self.metrics["Square_error"] = self.map.square_error()
-        # self.metrics["Neurons"] = len(self.som.network.nodes())
-        # self.metrics["Connections"] = len(self.som.network.edges())
+        if self.model["model"] == "gng":
+            self.metrics["Neurons"] = len(self.map.network.nodes())
+            self.metrics["Connections"] = len(self.map.network.edges())
         if self.dataset["type"] == "tracking":
             current_path = os.path.join("Data", "tracking", "dataset", self.dataset["file"])
             input_path = os.path.join(current_path, "input")
@@ -158,7 +159,7 @@ class Execution:
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
 
-            base = os.path.join("Results", "Sizing", self.metadata["name"], "results")
+            base = os.path.join("Results", "GNGopti", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
@@ -217,7 +218,7 @@ class Execution:
             temporal_roi = (int(roi_file[0]), int(roi_file[1]))
             mask_roi = Image.open(os.path.join(current_path, "ROI.png"))
 
-            base = os.path.join("Results", "NbImageEvals", self.metadata["name"], "results")
+            base = os.path.join("Results", "GNGoptimisation", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
 
@@ -251,7 +252,7 @@ class Execution:
             self.run()
             self.compute_metrics()
             self.save(path)
-        print("Simulation", self.metadata["name"], "ended")
+        #print("Simulation", self.metadata["name"], "ended")
 
 if __name__ == '__main__':
     exec = Execution()
