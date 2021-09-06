@@ -14,16 +14,16 @@ from matplotlib import cm
 import matplotlib
 import pandas as pd
 
-font = {'family' : 'normal',
-        'size'   : 24}
+#font = {'size'   : 24}
+font = {'size'   : 12}
 
 matplotlib.rc('font', **font)
 
 class Statistics:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "EpochsNbr2")
-        self.results_path = os.path.join("Statistics", "Stats")
+        self.folder_path = os.path.join("Executions", "Sizing")
+        self.results_path = os.path.join("Statistics", "sizing")
 
     def open_folder(self, path):
         for file in os.listdir(path):
@@ -35,128 +35,93 @@ class Statistics:
                 exec.light_open(full_path)
                 self.all_runs.append(exec)
 
+    def get_cdnet_videos_list(self):
+        videos_files = []
+        cdnet_path = os.path.join("Data", "tracking", "dataset")
+        categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))],
+                            key=str.lower)
+        for cat in categories:
+            elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if
+                               os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
+            for elem in elements:
+                videos_files.append(os.path.join(cat, elem))
+        return videos_files
+
     def cdnet_surface(self):
         os.makedirs(self.results_path, exist_ok=True)
 
-        videos_files = []
-        cdnet_path = os.path.join("Data", "tracking", "dataset")
-        categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
-        for cat in categories:
-            elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
-            for elem in elements:
-                videos_files.append(os.path.join(cat, elem))
+        videos_files = self.get_cdnet_videos_list()
         for file in videos_files:
             fig = self.surface_graph(file)
-            plt.savefig(os.path.join(self.results_path, file.replace("/", "_").replace("\\", "_") + ".png"))
+            plt.savefig(os.path.join(self.results_path, "videos", file.replace("/", "_").replace("\\", "_") + ".png"))
+            plt.close(fig)
 
-    def surface_graph(self, file=None):
-        x = []
-        y = []
-        z = []
-        for e in self.all_runs:
-            if file is None or file == e.dataset["file"]:
-                x.append(e.dataset["width"])
-                y.append(e.model["width"])
-                z.append(e.metrics["fmeasure"])
-            # y.append(10 * np.log10(1 / e.metrics["Square_error"]))
-        zmin, zmax = min(z), max(z)
-
-        surface = np.zeros((18, 26))
-        for e in self.all_runs:
-            surface[e.model["width"]-3, e.dataset["width"]-5] += e.metrics["fmeasure"]
-        surface = surface/3
-
-        X, Y = np.meshgrid(range(5, 31), range(3, 21))
-
-        # zmin, zmax = min(z), max(z)
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-
-        ax.set_zlim(0.95 * zmin, 1.05 * zmax)
-        ax.set_xlabel("Taille imagettes")
-        ax.set_ylabel("Taille carte")
-        # plt.xlabel("Taille d'imagettes")
-        ax.invert_xaxis()
-        surf = ax.plot_surface(X, Y, surface, cmap=cm.coolwarm)
-
-        return fig
-
-    def cdnet_graph(self):
-        os.makedirs(self.results_path, exist_ok=True)
-
-        exclusion_list = ["intermittentObjectMotion", "lowFramerate", "PTZ"]
-
-        videos_files = []
         cdnet_path = os.path.join("Data", "tracking", "dataset")
         categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
+
         for cat in categories:
-            if cat not in exclusion_list:
-                elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
-                for elem in elements:
-                    videos_files.append(os.path.join(cat, elem))
-        for file in videos_files:
-            fig = self.graph(file)
-            plt.savefig(os.path.join(self.results_path, file.replace("/", "_").replace("\\", "_") + ".png"))
+            fig = self.surface_graph(cat)
+            plt.savefig(os.path.join(self.results_path, "categories", cat + ".png"))
+            plt.close(fig)
 
-    def graph(self, file=None):
-        x = range(26)
-        y = np.zeros(26)
-        w = np.zeros(26)
-        z = np.zeros(26)
+        fig = self.cdnet_global_surface_graph()
+        plt.savefig(os.path.join(self.results_path, "global.png"))
+        plt.close(fig)
+
+    def surface_graph(self, file=""):
+        nbr_samples = 0
+        surface = np.zeros((8, 7))
         for e in self.all_runs:
-            if file is None or file == e.dataset["file"]:
-                y[e.model["threshold"]] += e.metrics["fmeasure"]
-                w[e.model["threshold"]] += e.metrics["precision"]
-                z[e.model["threshold"]] += e.metrics["recall"]
-        zmin, zmax = 0, 1
+            if file in e.dataset["file"]:
+                if e.model["width"] == 4 and e.dataset["width"] == 5:
+                    nbr_samples += 1        # Couting the number of samples
+                surface[(e.model["width"]-4)//3, (e.dataset["width"]-5)//5] += e.metrics["fmeasure"]
+        surface /= nbr_samples
 
+        X, Y = np.meshgrid(range(5, 36, 5), range(4, 26, 3))
 
         fig = plt.figure()
-
-        # ax.set_zlim(0.95 * zmin, 1.05 * zmax)
-        ax = fig.gca()
-        ax.set_xlabel("Threshold")
-        ax.set_ylabel("fmeasure")
-        # plt.xlabel("Taille d'imagettes")
-        # ax.invert_xaxis()
-        # scatter = ax.scatter(x, y, z, cmap=cm.coolwarm)
-
-        scatter = ax.scatter(x, y, c="b")
-        scatter = ax.scatter(x, w, c="r")
-        scatter = ax.scatter(x, z, c="g")
-
+        ax = fig.gca(projection='3d')
+        ax.set_zlim(0, 1) # 0.95 * zmin, 1.05 * zmax)
+        ax.set_xlabel("Taille imagettes")
+        ax.set_ylabel("Taille carte")
+        ax.set_xticks(list(range(5, 36, 5)))
+        ax.set_yticks(list(range(4, 26, 3)))
+        ax.locator_params(axis="z", nbins=10)
+        ax.invert_xaxis()
+        ax.plot_surface(X, Y, surface, cmap=cm.coolwarm)
         return fig
 
-    def all_graph(self, file=None):
-        x = range(26)
-        y = np.zeros(26)
-        w = np.zeros(26)
-        z = np.zeros(26)
-        for e in self.all_runs:
-            if file is None or file == e.dataset["file"]:
-                y[e.model["threshold"]] += e.metrics["fmeasure"]
-                w[e.model["threshold"]] += e.metrics["precision"]
-                z[e.model["threshold"]] += e.metrics["recall"]
-        zmin, zmax = 0.35, 0.4
+    def cdnet_global_surface_graph(self):
+        cdnet_path = os.path.join("Data", "tracking", "dataset")
+        categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
+        global_surface = np.zeros((8,7))
+        for cat in categories:
+            nbr_samples = 0
+            surface = np.zeros((8, 7))
+            for e in self.all_runs:
+                if cat in e.dataset["file"]:
+                    if e.model["width"] == 4 and e.dataset["width"] == 5:
+                        nbr_samples += 1        # Couting the number of samples
+                    surface[(e.model["width"]-4)//3, (e.dataset["width"]-5)//5] += e.metrics["fmeasure"]
+            surface /= nbr_samples
+            global_surface += surface
 
-        y = y / 39
-        w = w / 39
-        z = z / 39
-
+        global_surface /= len(categories)
+        print(categories)
+        print(len(categories), np.argmax(global_surface), np.max(global_surface))
+        X, Y = np.meshgrid(range(5, 36, 5), range(4, 26, 3))
 
         fig = plt.figure()
-
-        ax = fig.gca()
-        ax.set_ylim(0.95 * zmin, 1.05 * zmax)
-        ax.set_xlabel("threshold")
-        ax.set_ylabel("fmeasure")
-        # plt.xlabel("Taille d'imagettes")
-        # ax.invert_xaxis()
-        # scatter = ax.scatter(x, y, z, cmap=cm.coolwarm)
-        scatter = ax.scatter(x, y, c="b")
-        scatter = ax.scatter(x, w, c="r")
-        scatter = ax.scatter(x, z, c="g")
-
+        ax = fig.gca(projection='3d')
+        ax.set_zlim(0, 1) # 0.95 * zmin, 1.05 * zmax)
+        ax.set_xlabel("Taille imagettes")
+        ax.set_ylabel("Taille carte")
+        ax.set_xticks(list(range(5, 36, 5)))
+        ax.set_yticks(list(range(4, 26, 3)))
+        ax.locator_params(axis="z", nbins=10)
+        ax.invert_xaxis()
+        ax.plot_surface(X, Y, global_surface, cmap=cm.coolwarm)
         return fig
 
     def generate_csv(self):
@@ -218,7 +183,7 @@ class Statistics:
         #plt.fill_between(ranges, overall[1], overall[2], color='r', alpha=.1)  # std curves.
 
         plt.xlabel("Nombre d'images évaluées par séquence")
-        plt.ylabel("Différence de Fmeasure avec l'évaluation complète")
+        plt.ylabel("Différence de F-measure avec l'évaluation complète")
         plt.hlines([0.005, -0.005, 0.01, -0.01], 0, 200, colors='g', linestyles='dashed')
         plt.hlines([0], 0, 200, colors='g', linestyles='dotted')
         plt.vlines([105], -0.03, 0.03, colors='red', linestyles='solid', linewidth=2, label="Valeur sélectionnée")
@@ -270,12 +235,13 @@ class Statistics:
         cleaned = self.extract_data_from_video_epoch("baseline", "PETS")
         plt.plot(x, cleaned[0], linewidth=2, color='green', label="Moyenne des séquences croissantes")  # mean curve.
         plt.hlines([max(cleaned[0]), min(cleaned[0][40:])], 0, 200, colors='g', linestyles='dotted')
+        print([max(cleaned[0]), min(cleaned[0][40:])])
 
         print(max(cleaned[0]))
 
 
-        plt.xlabel("Nombre d'images évaluées par séquence")
-        plt.ylabel("Différence de Fmeasure avec l'évaluation complète")
+        plt.xlabel("Époques d'apprentissage")
+        plt.ylabel("F-measure")
         #plt.hlines([0.005, -0.005, 0.01, -0.01], 0, 200, colors='g', linestyles='dashed')
         #plt.hlines([0], 0, 200, colors='g', linestyles='dotted')
         #plt.vlines([105], -0.03, 0.03, colors='red', linestyles='solid', linewidth=2, label="Valeur sélectionnée")
@@ -343,15 +309,84 @@ class Statistics:
                 result = self.select(n-1, array[i+1:], elems+[array[i]], result, ref)
         return result
 
+    def global_threshold(self):
+        ranges = chain(range(1, 20), range(20, 51, 5))
+        x = sorted(list(ranges))
+
+        overall = self.extract_data_from_video_threshold("")
+        plt.plot(x, overall[:,0], linewidth=2, color='purple', label="F-mesure")  # mean curve.
+        plt.plot(x, overall[:,1], linewidth=2, color='blue', label="Précision")  # mean curve.
+        plt.plot(x, overall[:,2], linewidth=2, color='red', label="Rappel")  # mean curve.
+
+        print(np.argmax(overall[:,0]), np.max(overall[:,0]))
+
+        plt.xlabel("Seuil")
+        plt.ylabel("")
+        plt.legend()
+        plt.show()
+
+    def extract_data_from_video_threshold(self, video="", exclusion="None"):
+        data = {}
+        for e in self.all_runs:
+            if video in e.metadata["name"] and exclusion not in e.dataset["file"]:
+                cat = e.dataset["file"].split("/")[0]
+                if cat not in data:
+                    data[cat] = []
+                data[cat].append(np.asarray(e.metrics["fmeasure_threshold"])[:26])
+                #data.append(np.asarray(e.metrics["fmeasure_threshold"])[:26])
+        print(len(data["baseline"]))
+        res = []
+        for v in data.items():
+            res.append(np.asarray(v[1]).mean(axis=0))
+        return np.asarray(res).mean(axis=0)
+
+    def cdnet_threshold(self):
+        neurones = ["4x4", "7x7", "10x10", "13x13", "16x16", "19x19", "22x22", "25x25"]
+        pixels = ["5x5 px", "10x10 px", "15x15 px", "20x20 px", "25x25 px", "30x30 px", "35x35 px"]
+
+        data = []
+        for i in range(4, 26, 3):
+            line = []
+            for j in range(5, 36, 5):
+                res = self.extract_data_from_video_threshold(str(i)+"n-"+str(j)+"p")
+                line.append(int(np.max(res[:,0])*100))
+            data.append(np.asarray(line))
+        data = np.asarray(data)
+
+        fig, ax = plt.subplots()
+        im = ax.imshow(data)
+
+        # We want to show all ticks...
+        ax.set_xticks(np.arange(len(pixels)))
+        ax.set_yticks(np.arange(len(neurones)))
+        # ... and label them with the respective list entries
+        ax.set_xticklabels(pixels)
+        ax.set_yticklabels(neurones)
+
+        # Rotate the tick labels and set their alignment.
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+
+        # Loop over data dimensions and create text annotations.
+        for i in range(len(neurones)):
+            for j in range(len(pixels)):
+                text = ax.text(j, i, data[i, j], ha="center", va="center", color="w")
+
+        ax.set_title("Seuil optimal en fonction de la\n taille des imagettes et de la SOM")
+        fig.tight_layout()
+        plt.show()
+
+
 if __name__ == '__main__':
     sr = Statistics()
     sr.open_folder(sr.folder_path)
     # sr.generate_csv()
-    # sr.threshold_boxplot()
-    # sr.cdnet_graph()
+    #sr.global_threshold()
+    sr.cdnet_threshold()
+    # sr.cdnet_surface()
     # sr.surface_graph()
     #sr.variations_boxplot()
-    sr.nb_epochs_plot()
+    # sr.nb_images_per_sequence_plot()
+    # sr.nb_epochs_plot()
     # sr.all_graph()
     # sr.array_display(file="baseline/PETS2006")
     # plt.show()
