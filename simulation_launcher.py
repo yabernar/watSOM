@@ -9,7 +9,7 @@ from Code.execution import Execution
 class SimulationRun:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "sizing_to_finish")
+        self.folder_path = os.path.join("Executions", "Sizing")
 
     def create(self):
         os.makedirs(self.folder_path, exist_ok=True)
@@ -61,7 +61,7 @@ class SimulationRun:
 
     def evaluate(self, nb_cores=1):
         pool = mp.Pool(nb_cores)
-        pool.starmap(Execution.full_step_evaluation, zip(self.all_runs, itertools.repeat(sr.folder_path)))
+        pool.starmap(Execution.full_threshold_evaluation, zip(self.all_runs, itertools.repeat(sr.folder_path)))
         pool.close()
         pool.join()
 
@@ -71,5 +71,5 @@ if __name__ == '__main__':
     #sr.create()
     #sr.save()
     sr.open_folder(sr.folder_path)
-    sr.compute(16)
-    #sr.evaluate(8)
+    #sr.compute(16)
+    sr.evaluate(16)

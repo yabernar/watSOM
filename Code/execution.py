@@ -181,7 +181,7 @@ class Execution:
             roi_file = open(os.path.join(current_path, "temporalROI.txt"), "r").readline().split()
             temporal_roi = (int(roi_file[0]), int(roi_file[1]))
 
-            base = os.path.join("Results", "SOM_Executions", self.metadata["name"], "results")
+            base = os.path.join("Results", "Sizing", self.metadata["name"], "results")
             output_path = os.path.join(base, self.dataset["file"])
             supplements_path = os.path.join(base, "supplements")
             difference_path = os.path.join(supplements_path, "saliency")
@@ -191,6 +191,7 @@ class Execution:
             if nb_img_gen > 0:
                 step = (temporal_roi[1] + 1 - temporal_roi[0]) // nb_img_gen
 
+            res = []
             ranges = list(range(1, 20)) + list(range(20, 101, 5))
             for threshold in ranges:
                 for img in os.listdir(difference_path):
@@ -205,7 +206,9 @@ class Execution:
                 cmp = Comparator()
                 fitness = cmp.evaluate__folder_c(current_path, output_path, step)
                 # print(fitness)
-                self.metrics["fmeasure-t" + str(threshold)] = fitness
+                res.append(fitness)
+                #self.metrics["fmeasure-t" + str(threshold)] = fitness
+            self.metrics["fmeasure_threshold"] = res
 
     def compute_steps_metrics(self):
         # self.metrics["Square_error"] = self.som.square_error()
@@ -241,6 +244,11 @@ class Execution:
                 fitness = cmp.evaluate__folder_c(current_path, output_path, step)
                 res.append(fitness)
             self.metrics["fmeasure-nbimgs"] = res
+
+    def full_threshold_evaluation(self, path):
+        self.compute_varying_threshold_metric()
+        self.save(path)
+        print("Simulation", self.metadata["name"], "ended")
 
     def full_step_evaluation(self, path):
         self.compute_steps_metrics()
