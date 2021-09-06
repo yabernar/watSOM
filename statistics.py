@@ -334,7 +334,6 @@ class Statistics:
                     data[cat] = []
                 data[cat].append(np.asarray(e.metrics["fmeasure_threshold"])[:26])
                 #data.append(np.asarray(e.metrics["fmeasure_threshold"])[:26])
-        print(len(data["baseline"]))
         res = []
         for v in data.items():
             res.append(np.asarray(v[1]).mean(axis=0))
