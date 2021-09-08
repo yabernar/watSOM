@@ -14,16 +14,17 @@ from matplotlib import cm
 import matplotlib
 import pandas as pd
 
-#font = {'size'   : 24}
-font = {'size'   : 12}
+font = {'size'   : 24}
+#font = {'size'   : 14}
+#font = {'size'   : 12}
 
 matplotlib.rc('font', **font)
 
 class Statistics:
     def __init__(self):
         self.all_runs = []
-        self.folder_path = os.path.join("Executions", "Sizing")
-        self.results_path = os.path.join("Statistics", "sizing")
+        self.folder_path = os.path.join("Executions", "EpochsNbr2")
+        self.results_path = os.path.join("Statistics", "sizing_psnr")
 
     def open_folder(self, path):
         for file in os.listdir(path):
@@ -75,21 +76,23 @@ class Statistics:
             if file in e.dataset["file"]:
                 if e.model["width"] == 4 and e.dataset["width"] == 5:
                     nbr_samples += 1        # Couting the number of samples
-                surface[(e.model["width"]-4)//3, (e.dataset["width"]-5)//5] += e.metrics["fmeasure"]
+                #surface[(e.model["width"]-4)//3, (e.dataset["width"]-5)//5] += e.metrics["fmeasure_threshold"][6][0]  # Seuil de 7 (commence à 1)
+                surface[(e.model["width"] - 4) // 3, (e.dataset["width"] - 5) // 5] += 10*np.log10(1/e.metrics["Square_error"])
+
         surface /= nbr_samples
 
         X, Y = np.meshgrid(range(5, 36, 5), range(4, 26, 3))
 
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        ax.set_zlim(0, 1) # 0.95 * zmin, 1.05 * zmax)
+        ax.set_zlim(15, 50) # 0.95 * zmin, 1.05 * zmax)
         ax.set_xlabel("Taille imagettes")
         ax.set_ylabel("Taille carte")
         ax.set_xticks(list(range(5, 36, 5)))
         ax.set_yticks(list(range(4, 26, 3)))
-        ax.locator_params(axis="z", nbins=10)
+        ax.locator_params(axis="z", nbins=6)
         ax.invert_xaxis()
-        ax.plot_surface(X, Y, surface, cmap=cm.coolwarm)
+        ax.plot_surface(X, Y, surface, cmap=cm.plasma)
         return fig
 
     def cdnet_global_surface_graph(self):
@@ -103,7 +106,8 @@ class Statistics:
                 if cat in e.dataset["file"]:
                     if e.model["width"] == 4 and e.dataset["width"] == 5:
                         nbr_samples += 1        # Couting the number of samples
-                    surface[(e.model["width"]-4)//3, (e.dataset["width"]-5)//5] += e.metrics["fmeasure"]
+                    #surface[(e.model["width"]-4)//3, (e.dataset["width"]-5)//5] += e.metrics["fmeasure_threshold"][6][0]
+                    surface[(e.model["width"] - 4) // 3, (e.dataset["width"] - 5) // 5] += 10*np.log10(1/e.metrics["Square_error"])
             surface /= nbr_samples
             global_surface += surface
 
@@ -114,14 +118,14 @@ class Statistics:
 
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        ax.set_zlim(0, 1) # 0.95 * zmin, 1.05 * zmax)
+        ax.set_zlim(15, 45) # 0.95 * zmin, 1.05 * zmax)
         ax.set_xlabel("Taille imagettes")
         ax.set_ylabel("Taille carte")
         ax.set_xticks(list(range(5, 36, 5)))
         ax.set_yticks(list(range(4, 26, 3)))
-        ax.locator_params(axis="z", nbins=10)
+        ax.locator_params(axis="z", nbins=6)
         ax.invert_xaxis()
-        ax.plot_surface(X, Y, global_surface, cmap=cm.coolwarm)
+        ax.plot_surface(X, Y, global_surface, cmap=cm.plasma)
         return fig
 
     def generate_csv(self):
@@ -183,7 +187,7 @@ class Statistics:
         #plt.fill_between(ranges, overall[1], overall[2], color='r', alpha=.1)  # std curves.
 
         plt.xlabel("Nombre d'images évaluées par séquence")
-        plt.ylabel("Différence de F-measure avec l'évaluation complète")
+        plt.ylabel("Différence de F-mesure avec l'évaluation complète")
         plt.hlines([0.005, -0.005, 0.01, -0.01], 0, 200, colors='g', linestyles='dashed')
         plt.hlines([0], 0, 200, colors='g', linestyles='dotted')
         plt.vlines([105], -0.03, 0.03, colors='red', linestyles='solid', linewidth=2, label="Valeur sélectionnée")
@@ -241,7 +245,7 @@ class Statistics:
 
 
         plt.xlabel("Époques d'apprentissage")
-        plt.ylabel("F-measure")
+        plt.ylabel("F-mesure")
         #plt.hlines([0.005, -0.005, 0.01, -0.01], 0, 200, colors='g', linestyles='dashed')
         #plt.hlines([0], 0, 200, colors='g', linestyles='dotted')
         #plt.vlines([105], -0.03, 0.03, colors='red', linestyles='solid', linewidth=2, label="Valeur sélectionnée")
@@ -348,7 +352,8 @@ class Statistics:
             line = []
             for j in range(5, 36, 5):
                 res = self.extract_data_from_video_threshold(str(i)+"n-"+str(j)+"p")
-                line.append(int(np.max(res[:,0])*100))
+                line.append(np.argmax(res[:,0])+1)
+                #line.append(np.around(np.max(res[:,0])*100, 2))
             data.append(np.asarray(line))
         data = np.asarray(data)
 
@@ -371,22 +376,86 @@ class Statistics:
                 text = ax.text(j, i, data[i, j], ha="center", va="center", color="w")
 
         ax.set_title("Seuil optimal en fonction de la\n taille des imagettes et de la SOM")
+        #ax.set_title("F-mesure avec seuil optimal en fonction\nde la taille des imagettes et de la SOM")
         fig.tight_layout()
         plt.show()
 
+    def cdnet_stats(self, pixel_size, neuron_size, threshold):
+        cdnet_path = os.path.join("Data", "tracking", "dataset")
+        categories = sorted([d for d in os.listdir(cdnet_path) if os.path.isdir(os.path.join(cdnet_path, d))], key=str.lower)
+        global_all = []
+        max_all = []
+        for cat in categories:
+            nbr_samples = 0
+            global_cat = []
+            max_cat = []
+            elements = sorted([d for d in os.listdir(os.path.join(cdnet_path, cat)) if os.path.isdir(os.path.join(cdnet_path, cat, d))], key=str.lower)
+            for elem in elements:
+                global_video = []
+                max = 0
+                for e in self.all_runs:
+                    if elem in e.dataset["file"]:
+                        if e.model["width"] == neuron_size and e.dataset["width"] == pixel_size:
+                            global_video = e.metrics["fmeasure_threshold"][threshold-1]
+                            nbr_samples += 1
+                        values = np.asarray(e.metrics["fmeasure_threshold"])[:,0]
+                        current_max = np.argmax(values)
+                        if values[current_max] > max:
+                            max = values[current_max]
+                global_video = np.asarray(global_video) * 100
+                max *= 100
+                print(elem,"&", str(np.around(global_video[1], 1))+"\% &", str(np.around(global_video[2], 1))+"\% &", str(np.around(global_video[0], 1))+"\% &", str(np.around(max, 1))+"\% & &\\\\")
+                global_cat.append(global_video)
+                max_cat.append(max)
+            global_cat = np.asarray(global_cat).mean(axis=0)
+            max_cat = np.asarray(max_cat).mean(axis=0)
+            print(cat, "&", str(np.around(global_cat[1], 1)) + "\% &", str(np.around(global_cat[2], 1)) + "\% &", str(np.around(global_cat[0], 1)) + "\% &", str(np.around(max_cat, 1)) + "\% & &\\\\")
+            global_all.append(global_cat)
+            max_all.append(max_cat)
+        global_all = np.asarray(global_all).mean(axis=0)
+        max_all = np.asarray(max_all).mean(axis=0)
+        print("all &", str(np.around(global_all[1], 1)) + "\% &", str(np.around(global_all[2], 1)) + "\% &", str(np.around(global_all[0], 1)) + "\% &", str(np.around(max_all, 1)) + "\% & &\\\\")
+
+    def randomness_stats(self):
+        labels = ['', '', '', '', '', '', '', '', '']
+        Fmeasure = [2,2,9,21,30,22,12,1,1]
+        MSQE = [0,4,14,23,23,16,14,5,1]
+
+        x = np.arange(len(labels))  # the label locations
+        width = 0.42  # the width of the bars
+
+        fig, ax = plt.subplots()
+        rects1 = ax.bar(x - width / 2, Fmeasure, width, label='F-mesure')
+        rects2 = ax.bar(x + width / 2, MSQE, width, label='MSQE')
+
+        # Add some text for labels, title and custom x-axis tick labels, etc.
+        ax.set_ylabel('Nombre d\'exécutions')
+        ax.set_title('Variation aléatoire des SOM')
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels)
+        ax.legend()
+        ax.set_ylim(0, 34)
+
+        ax.bar_label(rects1, padding=3)
+        ax.bar_label(rects2, padding=3)
+
+        fig.tight_layout()
+
+        plt.show()
 
 if __name__ == '__main__':
     sr = Statistics()
     sr.open_folder(sr.folder_path)
     # sr.generate_csv()
     #sr.global_threshold()
-    sr.cdnet_threshold()
-    # sr.cdnet_surface()
+    #sr.cdnet_threshold()
+    #sr.cdnet_surface()
     # sr.surface_graph()
     #sr.variations_boxplot()
-    # sr.nb_images_per_sequence_plot()
-    # sr.nb_epochs_plot()
+    #sr.nb_images_per_sequence_plot()
+    sr.nb_epochs_plot()
     # sr.all_graph()
     # sr.array_display(file="baseline/PETS2006")
     # plt.show()
-
+    #sr.cdnet_stats(20, 25, 7)
+    #sr.randomness_stats()
